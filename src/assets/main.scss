@@ -1,0 +1,48 @@
+@import "./variables";
+body {
+  padding: 0;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: var(--color-gray-darker);
+}
+.el-collapse-item{
+ 
+
+}
+.el-collapse-item__header{
+  background-color: inherit;
+  border-radius: 9999px;
+  padding: 0.4rem 0 0.4rem 1rem;
+  box-sizing: border-box;
+  line-height:normal ;
+  box-shadow: 0 0 0 0;
+  border-bottom: 0;
+  height: 2rem;
+ 
+}
+.el-collapse-item__header:hover{
+  background-color: #E1E3E1;
+
+
+}
+.el-collapse-item__arrow{
+  display: none;
+}
+.el-collapse-item__wrap{
+  background-color: inherit;
+  border: none;
+ 
+}
+.el-collapse-item{
+
+}
+.el-dropdown-menu{
+  width: 20rem;
+}
+.el-dropdown-menu__item:not(.is-disabled):focus{
+  background-color: var(--color-background);
+}

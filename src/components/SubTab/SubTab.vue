@@ -1,90 +1,162 @@
 <script setup lang="ts">
-import StandardItem from './SubTabItem/StandardItem.vue'
+// import StandardItem from './SubTabItem/StandardItem.vue'
+
+
+const props = defineProps<{
+  language: string
+}>()
+
 
 const activeSubItem = ref('Standard')
-function openTab(tabName) {
+function openTab(tabName: string) {
   activeSubItem.value = tabName
 }
+const levels = [
+  {
+    id: 1,
+    name: 'Standard',
+    language: 'All',
+  },
+  {
+    id: 2,
+    name: 'Fluency',
+    language: 'English',
+  },
+  {
+    id: 3,
+    name: 'Natural',
+    language: 'English',
+    premium: {
+      title: 'Natural mode',
+      uses_tag: ['Personal Blogs & Diaries', 'Social Media Posts', 'Speeches & Talks', 'Creative Writing', 'Fiction & Non-fiction', 'Poetry'],
+      input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
+      paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
+
+    },
+
+  },
+  {
+    id: 4,
+    name: 'Formal',
+    language: 'English',
+    premium: {
+      title: 'Formal mode',
+      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
+      paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
+    }
+  },
+  {
+    id: 5,
+    name: 'Academic',
+    language: 'English',
+    premium: {
+      title: 'Academic mode',
+      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
+      paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
+    }
+  },
+  {
+    id: 6,
+    name: 'Simple',
+    language: 'English',
+    premium: {
+      title: 'Simple mode',
+      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
+      paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
+    }
+  },
+  {
+    id: 7,
+    name: 'Creative',
+    language: 'English',
+    premium: {
+      title: 'Creative mode',
+      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
+      paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
+    }
+  },
+  {
+    id: 8,
+    name: 'Expand',
+    language: 'English',
+    premium: {
+      title: 'Expand mode',
+      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
+      paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
+    }
+  },
+  {
+    id: 9,
+    name: 'Shorten',
+    language: 'English',
+    premium: {
+      title: 'Shorten mode',
+      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
+      paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
+    }
+  },
+  {
+    id: 10,
+    name: 'Custom',
+    language: 'English',
+    premium: {
+      title: 'Custom mode',
+      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
+      paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
+    }
+  },
+  
+]
+
+const itemActive = computed(() => levels.find(item => item.name === activeSubItem.value))
+function shouldShowTab(item : any) {
+  const currentLanguage = props.language.toLowerCase(); // Lấy giá trị ngôn ngữ hiện tại
+  if (currentLanguage === 'english') 
+    return true; // Nếu là 'English', hiển thị tất cả các tabs
+   else 
+    return item.name === 'Standard'; // Nếu không phải 'English', chỉ hiển thị 'Standard'
+  
+}
+
 </script>
 
 <template>
+  <!-- <div class="header">
+    <div v-for="item in levels" :key="item.id">
+      <button v-if="item.language === 'All' || item.language.toLowerCase() === language">
+        {{ item.name }}
+      </button>
+      <TextOutput v-if="item?.premium" :dieukien="item?.premium" />
+
+    </div>
+  </div> -->
   <div :class="$style.subTab">
     <div :class="$style.subTabText">
       <span>Modes:&nbsp;</span>
     </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Standard' ? $style.activeSubItem : '']"
-      @click="openTab('Standard')"
-    >
-      <span :class="activeSubItem === 'Standard' ? $style.activeSpan : ''">Standard</span>
-    </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Fluency' ? $style.activeSubItem : '']"
-      @click="openTab('Fluency')"
-    >
-      <span :class="activeSubItem === 'Fluency' ? $style.activeSpan : ''">Fluency</span>
-    </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Natural' ? $style.activeSubItem : '']"
-      @click="openTab('Natural')"
-    >
-      <span :class="activeSubItem === 'Natural' ? $style.activeSpan : ''">Natural</span>
-    </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Formal' ? $style.activeSubItem : '']"
-      @click="openTab('Formal')"
-    >
-      <span :class="activeSubItem === 'Formal' ? $style.activeSpan : ''">Formal</span>
-    </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Academic' ? $style.activeSubItem : '']"
-      @click="openTab('Academic')"
-    >
-      <span :class="activeSubItem === 'Academic' ? $style.activeSpan : ''">Academic</span>
-    </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Simple' ? $style.activeSubItem : '']"
-      @click="openTab('Simple')"
-    >
-      <span :class="activeSubItem === 'Simple' ? $style.activeSpan : ''">Simple</span>
+    <div v-for="item in levels" :key="item.id">
+      <div v-if="shouldShowTab(item)" :class="[$style.subTabItem, activeSubItem === item.name ? $style.activeSubItem : '']" @click="openTab(item.name)">
+        <span :class="activeSubItem === item.name ? $style.activeSpan : ''">{{ item.name }}</span>
+      </div>
     </div>
     <!---->
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Creative' ? $style.activeSubItem : '']"
-      @click="openTab('Creative')"
-    >
-      <span :class="activeSubItem === 'Creative' ? $style.activeSpan : ''">Creative</span>
-    </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Extend' ? $style.activeSubItem : '']"
-      @click="openTab('Extend')"
-    >
-      <span :class="activeSubItem === 'Extend' ? $style.activeSpan : ''">Extend</span>
-    </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Shorten' ? $style.activeSubItem : '']"
-      @click="openTab('Shorten')"
-    >
-      <span :class="activeSubItem === 'Shorten' ? $style.activeSpan : ''">Shorten</span>
-    </div>
-    <div
-      :class="[$style.subTabItem, activeSubItem === 'Custom' ? $style.activeSubItem : '']"
-      @click="openTab('Custom')"
-    >
-      <span :class="activeSubItem === 'Custom' ? $style.activeSpan : ''">Custom</span>
-    </div>
-    <div :class="$style.subTabRange">
+    <div  v-if="props.language.toLowerCase() === 'english'" :class="$style.subTabRange">
       <span :class="$style.subTabText">Synonyms: &nbsp;</span>
       <input id="vol" type="range" name="vol" min="0" max="100" value="50">
     </div>
     <div :class="$style.line" />
   </div>
-  <div :class="[$style.subTabContents, activeSubItem === 'Standard' ? $style.activeSubTab : '']">
-    <!-- <p>Content for Standard</p> -->
-    <StandardItem />
-  </div>
-  <div :class="[$style.subTabContents, activeSubItem === 'Fluency' ? $style.activeSubTab : '']">
-    <p>Content for Fluency</p>
+  <div v-for="item in levels" :key="item.id">
+    <div v-if="activeSubItem === item.name" :class="[$style.subTabContents, activeSubItem === item.name ? $style.activeSubTab : '']">
+      <StandardItem :dieukien="itemActive?.premium"/>
+    </div>
   </div>
 </template>
 
@@ -94,6 +166,7 @@ function openTab(tabName) {
   display: flex;
   align-items: center;
   border-bottom: 1px solid #e0e0e0;
+  background-color: white;
 }
 
 .subTabItem {

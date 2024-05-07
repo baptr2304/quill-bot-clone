@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { EventBus } from '@/eventBus';
 
-const isActive = ref(false)
-const isSidebarActive = ref(false)
-
+const isActive = ref(false);
 function toggleSidebar() {
-  isActive.value = !isActive.value
+  isActive.value = !isActive.value;
 }
+EventBus.on('toggleSidebar', toggleSidebar);
+
+onUnmounted(() => {
+  EventBus.off('toggleSidebar', toggleSidebar);
+})
 const selectedMenuItem = ref(null)
 
-function selectMenuItem(item) {
+function selectMenuItem( item: any) {
   selectedMenuItem.value = item
 }
 </script>
 
 <template>
-  <div :class="$style.menuBtn" @click="toggleSidebar">
-    <img src="@/assets/svg/menu-hambuger-svgrepo-com.svg" alt="">
-  </div>
   <div :class="[$style.sideBar, $style.newClass, isActive ? $style.active : '', $style.isSidebarActive]">
     <div :class="[$style.sideBarGroupFirst, $style.sideBarGroup]">
       <a :class="[$style.sideBarItem, { selected: selectedMenuItem === 'Paraphraser' }]" href="#" @click="selectMenuItem('Paraphraser')">
@@ -153,13 +153,6 @@ a {
   text-decoration: none;
 }
 
-.menuBtn {
-  position: fixed;
-  top: 0.7rem;
-  left: 0.6rem;
-  cursor: pointer;
-}
-
 .menuBtn img {
   width: 1.5rem;
   height: 1.5rem;
@@ -168,12 +161,11 @@ a {
 .sideBar {
   height: calc(100vh - 3rem);
   border-right: 1px solid #e1d8d8;
-  transition: all 0.5s ease;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   position: relative;
-
+  margin-top: 3rem;
 }
 
 .sideBarGroup {
@@ -192,7 +184,7 @@ a {
   align-items: center;
   width: 3rem;
   max-height: 2.5rem;
-  transition: ease-out 0.2s;
+
 
 }
 
@@ -211,7 +203,6 @@ a {
   color: #232021;
   flex-grow: 1;
   opacity: 0;
-  transition: all 0.5s ease;
   margin-left: 0.5rem;
   white-space: nowrap;
 }
@@ -355,37 +346,33 @@ a {
   font-weight: 600;
   padding: 0 0.938rem 0.75rem;
   display: block;
-  transition: all 0.5s ease;
+
   position: absolute;
   bottom: 0;
   opacity: 0;
 
 }
-// .active  span{
-//   transition: all 0.5s ease;
 
-// }
 
 .active .sideBarItem span {
-  transition: all 0.5s ease;
+
   opacity: 1;
   font-size: 0.875rem;
 
 }
 .active .sideBarItem{
   width: 100%;
-  transition: all 0.5s ease;
+
 
 }
 .active .sideBarItem .sideBarItemBtnLaunch {
-  transition: all 0.5s ease;
+
   opacity: 1;
 
 }
 .active .version{
   opacity: 1;
   visibility: visible;
-  transition: all 0.5s ease;
 }
 .selected{
   color: red;

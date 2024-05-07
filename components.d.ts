@@ -7,23 +7,13 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    ElButton: typeof import('element-plus/es')['ElButton']
-    ElCollapse: typeof import('element-plus/es')['ElCollapse']
-    ElCollapseItem: typeof import('element-plus/es')['ElCollapseItem']
-    ElDropdown: typeof import('element-plus/es')['ElDropdown']
-    ElDropdownItem: typeof import('element-plus/es')['ElDropdownItem']
-    ElDropdownMenu: typeof import('element-plus/es')['ElDropdownMenu']
-    ElIcon: typeof import('element-plus/es')['ElIcon']
-    ElPopover: typeof import('element-plus/es')['ElPopover']
-    ElTooltip: typeof import('element-plus/es')['ElTooltip']
+    DirectionMenu: typeof import('./src/components/SubTab/DirectionMenu.vue')['default']
     Header: typeof import('./src/components/Layout/Header.vue')['default']
     Main: typeof import('./src/components/Layout/Main.vue')['default']
-    PopupDelete: typeof import('./src/components/Layout/Popup/PopupDelete.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sidebar: typeof import('./src/components/Layout/Sidebar.vue')['default']
     StandardItem: typeof import('./src/components/SubTab/SubTabItem/StandardItem.vue')['default']
     SubTab: typeof import('./src/components/SubTab/SubTab.vue')['default']
-    UtilitySidebar: typeof import('./src/components/Layout/UtilitySidebar.vue')['default']
   }
 }

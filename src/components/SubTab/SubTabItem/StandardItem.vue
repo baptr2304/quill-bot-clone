@@ -96,7 +96,7 @@ function deleteItem() {
 // show the sample text
 function handleTrySampleText() {
   question.value = sampleText
-  fetchAnswer() 
+  fetchAnswer() // Chỉ cần gọi nếu bạn muốn ngay lập tức xử lý text mẫu
  
 }
 </script>

@@ -15,9 +15,14 @@ function getTextParaphrased() {
   return dieukien.value.paraphrased_text.replace(/{/g, '<span style="color: red">').replace(/}/g, '</span>')
 }
 const question = ref('')
+const placeholder = 'To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;'
 const answer = ref('')
 const isLoading = ref(false)
 const sampleText = 'The sunset was wonderful'
+
+function handleInput(event) {
+  question.value = event.target.textContent
+}
 
 async function fetchAnswer() {
   isLoading.value = true
@@ -34,17 +39,12 @@ async function fetchAnswer() {
 
 const originalText = ref('')
 
-// use openai api
-// async function handleParaphrase() {
-//   paraphrasedText.value = await openaiApi.getParaphraseFullContent(originalText.value)
-// }
-
 const showPopup = ref(false)
 const showTrash = ref(false)
 const showMiddleBtn = ref(true)
 const boxA = ref<HTMLElement | null>(null)
 const boxB = ref<HTMLElement | null>(null)
-const boxAB = ref<HTMLElement | null>(null);
+const boxAB = ref<HTMLElement | null>(null)
 let isHandlerDragging = false
 
 function startDragging() {
@@ -60,7 +60,7 @@ function stopDragging() {
 }
 
 function handleDragging(e: MouseEvent) {
-  if (!isHandlerDragging || !boxA.value || !boxB.value|| !boxAB.value)
+  if (!isHandlerDragging || !boxA.value || !boxB.value || !boxAB.value)
     return
   const boxARect = boxA.value.getBoundingClientRect()
   if (!boxARect)
@@ -96,8 +96,92 @@ function deleteItem() {
 // show the sample text
 function handleTrySampleText() {
   question.value = sampleText
-  fetchAnswer() // Chỉ cần gọi nếu bạn muốn ngay lập tức xử lý text mẫu
- 
+  fetchAnswer()
+}
+
+const boundingReact = ref({ x: 0, y: 0 })
+const tooltipVisible = ref(false)
+// Optional: Handling placeholder manually
+function handleFocus(event) {
+  if (event.target.textContent === placeholder) {
+    event.target.textContent = ''
+    event.target.style.color = 'black' // Reset màu chữ
+  }
+}
+
+function handleBlur(event) {
+  if (event.target.textContent.trim() === '') {
+    event.target.textContent = placeholder
+    event.target.style.color = 'grey'
+  }
+  tooltipVisible.value = false
+}
+function handleMouseUp() {
+  // const selection = window.getSelection()
+  // if (selection?.toString().trim() === '')
+  //   return
+  // tooltipVisible.value = true
+  const selection = window.getSelection()
+  if (selection?.toString().trim()) {
+    fetchParaphrasedText(selection.toString())
+    const range = selection.getRangeAt(0)
+    const rect = range.getBoundingClientRect()
+    boundingReact.value = { x: rect.right, y: rect.top }
+    tooltipVisible.value = true
+  }
+  else {
+    tooltipVisible.value = false
+  }
+}
+// tooltip api
+async function fetchParaphrasedText(selectionText) {
+  isLoading.value = true
+  try {
+    const response = await useGetGenerativeModelGP(selectionText)
+    answer.value = response
+  }
+  catch (error) {
+    console.error('Error fetching paraphrased text:', error)
+    answer.value = 'Error fetching text'
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+onMounted(() => {
+  // co 1 su kien khi lang nghe no se lam gi do khi minh boi den
+  document.addEventListener('selectionchange', () => {
+    const selection = window.getSelection()
+
+    if (!selection?.rangeCount || selection.toString().length === 0) {
+      tooltipVisible.value = false
+      return
+    }
+    const range = selection.getRangeAt(0)
+    const rect = range.getBoundingClientRect()
+    boundingReact.value = {
+      x: rect.right,
+      y: rect.top,
+    }
+  })
+})
+
+function replaceSelectedText() {
+  const selection = window.getSelection()
+  if (!selection.rangeCount)
+    return
+
+  const range = selection.getRangeAt(0)
+  range.deleteContents()
+
+  const newNode = document.createTextNode(answer.value)
+  range.insertNode(newNode)
+
+  const contentDiv = document.getElementById('bounding')
+  if (contentDiv)
+    question.value = contentDiv.textContent
+  tooltipVisible.value = false
+  selection.removeAllRanges()
 }
 </script>
 
@@ -107,10 +191,39 @@ function handleTrySampleText() {
       ref="boxA" :class="[$style.textAreaItem, $style.textAreaItemLeft]" @input="checkTrash"
       @submit.prevent="fetchAnswer"
     >
-      <textarea
-        v-model="question" name="question" :class="$style.textAreaItemLeftTextArea"
-        placeholder="To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;"
+      <div
+        id="bounding"
+        contenteditable
+        name="question" :class="$style.textAreaItemLeftTextArea"
+        :placeholder="placeholder" @input="handleInput" @blur="handleBlur" @focus="handleFocus"
+        @mouseup="handleMouseUp"
       />
+      <!-- tooltip -->
+      <div>
+        <div
+          v-if="tooltipVisible && !isLoading"
+          :style="{
+            backgroundColor: 'var(--color-primary)',
+            borderRadius: '0.5rem',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: 'white',
+            minWidth: '4rem',
+            minHeight: '3rem',
+            position: 'fixed',
+            top: `${boundingReact.y}px`,
+            left: `${boundingReact.x}px`,
+            zindex: 100000,
+            padding: '0.5rem',
+          }"
+       
+        >
+          {{ answer }}
+          <img src="@/assets/svg/tick-double-svgrepo-com.svg" alt="" :class="$style.imgReplace"    @mousedown="replaceSelectedText" >
+        </div>
+      </div>
+
       <div :class="$style.textAreaFooter">
         <div :class="$style.textAreaFooterUpload">
           <img src="/src/assets/svg/upload-to-cloud-svgrepo-com.svg" alt="">
@@ -264,13 +377,6 @@ function handleTrySampleText() {
 }
 
 textarea {
-  border: none;
-  outline: none;
-  resize: none;
-  width: 100%;
-  min-height: 22rem;
-  background-color: #ffffff;
-  margin-top: 1rem;
 
 }
 
@@ -281,6 +387,14 @@ textarea {
 }
 .textAreaItemLeftTextArea {
   font-size: 1rem;
+  min-height: 22rem;
+  border: none;
+  outline: none;
+  resize: none;
+  width: 100%;
+
+  background-color: #ffffff;
+  margin-top: 1rem;
 }
 .textAreaItemTrashBin {
   position: absolute;
@@ -589,5 +703,15 @@ textarea {
   width: 1rem;
   height: 1rem;
 
+}
+// .tooltipChangeData{
+//   background-color: red;
+//   width: 20px;
+//   height:20px;
+// }
+.imgReplace{
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.5rem;
 }
 </style>

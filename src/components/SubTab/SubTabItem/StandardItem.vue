@@ -19,10 +19,12 @@ const placeholder = 'To rewrite text, enter or paste it here and press &quot;Par
 const answer = ref('')
 const isLoading = ref(false)
 const sampleText = 'The sunset was wonderful'
-
-function handleInput(event) {
-  question.value = event.target.textContent
-}
+const popoverRef = ref<HTMLElement | null>(null)
+const tooltipRef = ref<HTMLElement | null>(null)
+const replaceTextTooltip = ref('')
+const results = ref<string[]>([])
+const currentIndex = ref(0)
+const isRefreshing = ref(false)
 
 async function fetchAnswer() {
   isLoading.value = true
@@ -45,6 +47,7 @@ const showMiddleBtn = ref(true)
 const boxA = ref<HTMLElement | null>(null)
 const boxB = ref<HTMLElement | null>(null)
 const boxAB = ref<HTMLElement | null>(null)
+const mousePosition = ref({ x: 0, y: 0 })
 let isHandlerDragging = false
 
 function startDragging() {
@@ -76,7 +79,6 @@ function handleDragging(e: MouseEvent) {
   boxB.value.style.width = `calc(100% - ${newWidth}px)`
 }
 
-// if the textarea is not empty show the trash bin
 function checkTrash() {
   showTrash.value = !!originalText.value
   showMiddleBtn.value = !!originalText.value
@@ -98,90 +100,175 @@ function handleTrySampleText() {
   question.value = sampleText
   fetchAnswer()
 }
+type selectionStatus = 'initial' | 'tooltip' | 'popover'
+const status = ref<selectionStatus>('initial')
 
 const boundingReact = ref({ x: 0, y: 0 })
-const tooltipVisible = ref(false)
-// Optional: Handling placeholder manually
-function handleFocus(event) {
-  if (event.target.textContent === placeholder) {
-    event.target.textContent = ''
-    event.target.style.color = 'black' // Reset màu chữ
+
+let selection: Selection | null = null
+function isMouseInElement(e: HTMLElement | null) {
+  const rect = e?.getBoundingClientRect()
+  if (!mousePosition.value || !rect)
+    return false
+  return (
+    mousePosition.value.x >= rect.left
+    && mousePosition.value.x <= rect.right
+    && mousePosition.value.y >= rect.top
+    && mousePosition.value.y <= rect.bottom
+  )
+}
+function handleBlur() {
+  if (!selection?.anchorNode || !selection?.focusNode)
+    return
+  if (isMouseInElement(boxB.value) || isMouseInElement(tooltipRef.value) || isMouseInElement(popoverRef.value)) {
+    const range = document.createRange()
+    range.setStart(selection.anchorNode, selection.anchorOffset || 0)
+    range.setEnd(selection.focusNode, selection.focusOffset || 0)
+    selection.removeAllRanges()
+    selection.addRange(range)
+  }
+  //  status.value = 'initial'
+}
+
+function handleMouseUp() {
+  if (selection?.toString().trim()) {
+    // fetchParaphrasedText(selection.toString())
+    const range = selection?.getRangeAt(0)
+    const rect = range.getBoundingClientRect()
+    boundingReact.value = { x: rect.right, y: rect.top }
+    // tooltipVisible.value = true
+    status.value = 'tooltip'
+  }
+  else {
+    // tooltipVisible.value = false
+    status.value = 'initial'
   }
 }
 
-function handleBlur(event) {
-  if (event.target.textContent.trim() === '') {
-    event.target.textContent = placeholder
-    event.target.style.color = 'grey'
-  }
-  tooltipVisible.value = false
-}
-function handleMouseUp() {
-  // const selection = window.getSelection()
-  // if (selection?.toString().trim() === '')
-  //   return
-  // tooltipVisible.value = true
-  const selection = window.getSelection()
-  if (selection?.toString().trim()) {
-    fetchParaphrasedText(selection.toString())
-    const range = selection.getRangeAt(0)
-    const rect = range.getBoundingClientRect()
-    boundingReact.value = { x: rect.right, y: rect.top }
-    tooltipVisible.value = true
-  }
-  else {
-    tooltipVisible.value = false
-  }
-}
-// tooltip api
-async function fetchParaphrasedText(selectionText) {
-  isLoading.value = true
-  try {
-    const response = await useGetGenerativeModelGP(selectionText)
-    answer.value = response
-  }
-  catch (error) {
-    console.error('Error fetching paraphrased text:', error)
-    answer.value = 'Error fetching text'
-  }
-  finally {
-    isLoading.value = false
-  }
-}
 onMounted(() => {
   // co 1 su kien khi lang nghe no se lam gi do khi minh boi den
   document.addEventListener('selectionchange', () => {
-    const selection = window.getSelection()
+    selection = window.getSelection()
 
     if (!selection?.rangeCount || selection.toString().length === 0) {
-      tooltipVisible.value = false
+      // status.value = 'initial'
+      // tooltipVisible.value = false
       return
     }
-    const range = selection.getRangeAt(0)
+    const range = selection?.getRangeAt(0)
     const rect = range.getBoundingClientRect()
     boundingReact.value = {
       x: rect.right,
       y: rect.top,
     }
   })
+  document.addEventListener('mousemove', (e) => {
+    mousePosition.value = { x: e.clientX, y: e.clientY }
+  })
 })
 
 function replaceSelectedText() {
-  const selection = window.getSelection()
-  if (!selection.rangeCount)
+  selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0)
     return
 
-  const range = selection.getRangeAt(0)
+  const range = selection?.getRangeAt(0)
   range.deleteContents()
-
-  const newNode = document.createTextNode(answer.value)
+  const newNode = document.createTextNode(replaceTextTooltip.value)
   range.insertNode(newNode)
 
-  const contentDiv = document.getElementById('bounding')
-  if (contentDiv)
-    question.value = contentDiv.textContent
-  tooltipVisible.value = false
   selection.removeAllRanges()
+  closePopover()
+}
+// popover
+
+// tooltip api
+
+// navigation results
+function navigateResult(direction: 'prev' | 'next') {
+  if (direction === 'prev' && currentIndex.value > 0)
+    currentIndex.value--
+  else if (direction === 'next' && currentIndex.value < results.value.length - 1)
+    currentIndex.value++
+
+  replaceTextTooltip.value = results.value[currentIndex.value]
+}
+
+const popoverRect = ref({ x: 0, y: 0 })
+// function handleTooltipClick() {
+//   selection = window.getSelection()
+//   if (selection.rangeCount > 0) {
+//     fetchParaphrasedText(selection.toString())
+//     const range = selection?.getRangeAt(0)
+//     const rectPopover = range.getBoundingClientRect()
+//     popoverRect.value = {
+//       x: rectPopover.left,
+//       y: rectPopover.bottom,
+//     }
+//   }
+//   status.value = 'popover'
+// }
+function handleTooltipClick() {
+  if (selection) {
+    fetchParaphrasedText(selection?.toString())
+    const range = selection?.getRangeAt(0)
+    const rect = range?.getBoundingClientRect()
+    const popoverWidth = 480
+    const popoverHeight = 280
+
+    let left = rect.left + (rect.width / 2) + window.scrollX - popoverWidth / 2
+    let top = rect.bottom + window.scrollY + 10
+
+    if (left < 0)
+      left = 10
+    else if (left + popoverWidth > window.innerWidth)
+      left = window.innerWidth - popoverWidth - 20
+
+    if (top + popoverHeight > window.innerHeight + window.scrollY)
+      top = rect.top + window.scrollY - popoverHeight - 10
+
+    popoverRect.value = { x: left, y: top }
+    status.value = 'popover'
+  }
+}
+
+async function fetchParaphrasedText(selectionText: any) {
+  try {
+    isRefreshing.value = true
+    const response = await useGetGenerativeModelGP(selectionText)
+    results.value.push(response as string)
+    currentIndex.value = results.value.length - 1
+    replaceTextTooltip.value = response
+    isRefreshing.value = false
+  }
+  catch (error) {
+    console.error('Error fetching paraphrased text:', error)
+    replaceTextTooltip.value = 'Error fetching text'
+  }
+}
+// refresh text
+async function refreshText() {
+  if (results.value[currentIndex.value]) {
+    try {
+      isRefreshing.value = true
+      const response = await useGetGenerativeModelGP(results.value[currentIndex.value])
+      results.value.push(response as string)
+      currentIndex.value = results.value.length - 1
+      replaceTextTooltip.value = response
+      isRefreshing.value = false
+      // results
+    }
+    catch (error) {
+      console.error('Error refreshing text:', error)
+      replaceTextTooltip.value = 'Error fetching text'
+    }
+  }
+}
+function closePopover() {
+  status.value = 'initial'
+  results.value = []
+  currentIndex.value = 0
+  replaceTextTooltip.value = ''
 }
 </script>
 
@@ -191,39 +278,11 @@ function replaceSelectedText() {
       ref="boxA" :class="[$style.textAreaItem, $style.textAreaItemLeft]" @input="checkTrash"
       @submit.prevent="fetchAnswer"
     >
-      <div
-        id="bounding"
-        contenteditable
+      <textarea
+        v-model="question"
         name="question" :class="$style.textAreaItemLeftTextArea"
-        :placeholder="placeholder" @input="handleInput" @blur="handleBlur" @focus="handleFocus"
-        @mouseup="handleMouseUp"
+        :placeholder="placeholder"
       />
-      <!-- tooltip -->
-      <div>
-        <div
-          v-if="tooltipVisible && !isLoading"
-          :style="{
-            backgroundColor: 'var(--color-primary)',
-            borderRadius: '0.5rem',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            color: 'white',
-            minWidth: '4rem',
-            minHeight: '3rem',
-            position: 'fixed',
-            top: `${boundingReact.y}px`,
-            left: `${boundingReact.x}px`,
-            zindex: 100000,
-            padding: '0.5rem',
-          }"
-       
-        >
-          {{ answer }}
-          <img src="@/assets/svg/tick-double-svgrepo-com.svg" alt="" :class="$style.imgReplace"    @mousedown="replaceSelectedText" >
-        </div>
-      </div>
-
       <div :class="$style.textAreaFooter">
         <div :class="$style.textAreaFooterUpload">
           <img src="/src/assets/svg/upload-to-cloud-svgrepo-com.svg" alt="">
@@ -282,7 +341,64 @@ function replaceSelectedText() {
       </div>
     </form>
     <div :class="$style.handler" @mousedown="startDragging" @mouseup="stopDragging" />
-    <div ref="boxB" :class="[$style.textAreaItem, $style.textAreaItemRight]">
+    <!-- popover -->
+    <div
+      v-if="status === 'tooltip' && !isLoading" ref="tooltipRef" :class="$style.tooltipIcon" :style="{
+        top: `${boundingReact.y}px`,
+        left: `${boundingReact.x}px`,
+        position: 'fixed',
+
+      }"
+      @click="handleTooltipClick"
+    >
+      <img src="@/assets/svg/bling-svgrepo-com.svg" alt="">
+    </div>
+    <div
+      v-else-if="status === 'popover' "
+      ref="popoverRef"
+      :class="$style.popover" :style="{
+        top: `${popoverRect.y}px`,
+        left: `${popoverRect.x}px`,
+      }"
+    >
+      <div :class="$style.popoverHeader">
+        <div :class="$style.popoverHeaderLeft">
+          <img src="@/assets/svg/bling-svgrepo-com.svg" alt="">
+          <span>S-Group Paraphraser</span>
+        </div>
+        <img src="@/assets/svg/svgStandardItem/cancel-close-delete-svgrepo-com.svg" alt="" @click="closePopover">
+      </div>
+      <div :class="$style.popoverBody">
+        <div :class="$style.popoverBodyTop">
+          <div :class="[$style.popoverBodyRefresh, $style.popoverBodyTopCommon]" @click="refreshText">
+            <img src="@/assets/svg/svgStandardItem/refresh-ccw-svgrepo-com.svg" :class="[isRefreshing === true && $style.loading]" alt="">
+            <span>Refresh</span>
+          </div>
+          <div v-if="results?.length" :class="[$style.popoverBodyCount, $style.popoverBodyTopCommon]">
+            <img src="@/assets/svg/svgStandardItem/left-arrow-backup-2-svgrepo-com.svg" alt="" @click="navigateResult('prev')">
+            <span>{{ currentIndex + 1 }} / {{ results?.length }}</span>
+            <img src="@/assets/svg/svgStandardItem/right-arrow-svgrepo-com.svg" alt="" @click="navigateResult('next')">
+          </div>
+        </div>
+        <div :class="$style.popoverBodyMiddle">
+          <p>{{ replaceTextTooltip }}</p>
+        </div>
+        <div :class="$style.popoverBodyBottom">
+          <div :class="[$style.popoverBodyBottomBtn, $style.popoverBodyBottomBtnCopy]">
+            <span>Copy</span>
+          </div>
+          <div :class="[$style.popoverBodyBottomBtn, $style.popoverBodyBottomBtnApply]" @click="replaceSelectedText">
+            <img src="@/assets/svg/svgStandardItem/change-svgrepo-com.svg" alt="">
+            <span>Apply</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      id="bounding" ref="boxB" contenteditable
+      :class="[$style.textAreaItem, $style.textAreaItemRight]"
+      @blur="handleBlur" @mouseup="handleMouseUp"
+    >
       <div v-if="dieukien" :class="$style.textOutputPremiumContainer">
         <div :class="$style.textOutputPremium">
           <div :class="$style.textOutputPremiumTop">
@@ -308,7 +424,9 @@ function replaceSelectedText() {
               <p>
                 PARAPHRASED TEXT
               </p>
-              <span v-html="getTextParaphrased()" />
+              <span
+                v-html="getTextParaphrased()"
+              />
             </div>
           </div>
         </div>
@@ -356,6 +474,9 @@ function replaceSelectedText() {
 </template>
 
 <style lang="scss" module>
+[contenteditable] {
+  outline: 0px solid transparent;
+}
 .textArea {
   display: flex;
   width: 100%;
@@ -373,6 +494,7 @@ function replaceSelectedText() {
   flex-direction: column;
   background-color: #ffffff;
   max-width: 100%;
+  // scroll
 
 }
 
@@ -396,6 +518,12 @@ textarea {
   background-color: #ffffff;
   margin-top: 1rem;
 }
+// css scroll
+// .textAreaItemLeftTextArea::-webkit-scrollbar {
+//   width: 0.5rem;
+// }
+// css scroll color
+
 .textAreaItemTrashBin {
   position: absolute;
   top: 1rem;
@@ -410,7 +538,7 @@ textarea {
 }
 
 .textAreaItemRight {
-  padding-right: 1.2rem;
+  // padding-right: 1.2rem;
   border-radius: 0 0 1rem 0;
   margin-top: 1rem;
 }
@@ -713,5 +841,138 @@ textarea {
   width: 1rem;
   height: 1rem;
   margin-left: 0.5rem;
+}
+.popover{
+  // display: none;
+  position: fixed;
+  // transform: translate(-50%, -50%);
+  z-index: 100000;
+  width: 30rem;
+  height: 17.5rem;
+  background-color: white;
+  box-shadow: 0 0.375rem 0.75rem 0 rgba(0, 0, 0, 0.18);
+  border-radius: 0.75rem;
+  padding:  1.8rem 1.5rem;
+
+}
+.popoverHeader{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+}
+.popoverHeader img{
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.popoverHeaderLeft{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7B7B7B;
+}
+.popoverHeaderLeft img{
+  margin-right: 0.5rem;
+}
+// css img last child of div popoverHeaderLeft
+.popoverHeader img:last-child{
+  cursor: pointer;
+}
+
+.popoverBodyTopCommon{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+}
+.popoverBodyTop{
+  display: flex;
+  align-items: center;
+  color: #7B7B7B;
+  font-size: 1rem;
+  justify-content: space-between;
+  margin: 0.5rem 0;
+}
+.popoverBodyTopCommon img {
+  width: 1rem;
+  height: 1rem;
+}
+.popoverBodyRefresh{
+  cursor: pointer;
+}
+.popoverBodyRefresh img {
+&.loading{
+  animation: loading 1.5s linear infinite;
+
+}
+  margin-right: 0.5rem;
+}
+@keyframes loading {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+.popoverBodyMiddle{
+  background-color: #F8F8F8;
+  color: #555555;
+  padding: 0.75rem 0.5rem 0 1rem;
+  height: 7rem;
+  overflow-y: auto;
+  border-radius: 0.5rem;
+}
+// css scroll
+.popoverBodyMiddle::-webkit-scrollbar {
+  width: 0.5rem;
+
+}
+.popoverBodyMiddle p{
+  margin:0;
+}
+.popoverBodyBottom{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.popoverBodyBottomBtn{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 1rem 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+}
+.popoverBodyBottomBtnCopy{
+  border: 1px solid #E7E8EA;
+  color: #6F6F6F;
+}
+.popoverBodyBottomBtnApply{
+  background-color:#4643DD;
+  color:white;
+  cursor: pointer;
+}
+.popoverBodyBottomBtnApply img{
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+.tooltipIcon{
+  min-width: 2rem;
+  min-height: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
+  background-color:white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.tooltipIcon img{
+  width: 1.5rem;
+  height:1.5rem;
+  margin: 0.5rem;
+
 }
 </style>

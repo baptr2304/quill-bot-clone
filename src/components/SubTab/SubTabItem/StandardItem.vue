@@ -16,7 +16,7 @@ function getTextParaphrased() {
 }
 const question = ref('')
 const placeholder = 'To rewrite text, enter or paste it here and press "Paraphrase".'
-const answer = ref('The sunset was breathtaking')
+const answer = ref('')
 const isLoading = ref(false)
 const sampleText = 'The sunset was wonderful'
 const popoverRef = ref<HTMLElement | null>(null)

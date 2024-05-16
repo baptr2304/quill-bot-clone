@@ -15,8 +15,8 @@ function getTextParaphrased() {
   return dieukien.value.paraphrased_text.replace(/{/g, '<span style="color: red">').replace(/}/g, '</span>')
 }
 const question = ref('')
-const placeholder = 'To rewrite text, enter or paste it here and press &quot;Paraphrase.&quot;'
-const answer = ref('')
+const placeholder = 'To rewrite text, enter or paste it here and press "Paraphrase".'
+const answer = ref('The sunset was breathtaking')
 const isLoading = ref(false)
 const sampleText = 'The sunset was wonderful'
 const popoverRef = ref<HTMLElement | null>(null)
@@ -127,20 +127,19 @@ function handleBlur() {
     selection.removeAllRanges()
     selection.addRange(range)
   }
-  //  status.value = 'initial'
 }
-
 function handleMouseUp() {
   if (selection?.toString().trim()) {
-    // fetchParaphrasedText(selection.toString())
     const range = selection?.getRangeAt(0)
     const rect = range.getBoundingClientRect()
+    // xoa ket qua cu
+    results.value = []
+    currentIndex.value = 0
+    replaceTextTooltip.value = ''
     boundingReact.value = { x: rect.right, y: rect.top }
-    // tooltipVisible.value = true
     status.value = 'tooltip'
   }
   else {
-    // tooltipVisible.value = false
     status.value = 'initial'
   }
 }
@@ -150,11 +149,9 @@ onMounted(() => {
   document.addEventListener('selectionchange', () => {
     selection = window.getSelection()
 
-    if (!selection?.rangeCount || selection.toString().length === 0) {
-      // status.value = 'initial'
-      // tooltipVisible.value = false
+    if (!selection?.rangeCount || selection.toString().length === 0) 
       return
-    }
+    
     const range = selection?.getRangeAt(0)
     const rect = range.getBoundingClientRect()
     boundingReact.value = {
@@ -180,9 +177,7 @@ function replaceSelectedText() {
   selection.removeAllRanges()
   closePopover()
 }
-// popover
 
-// tooltip api
 
 // navigation results
 function navigateResult(direction: 'prev' | 'next') {
@@ -195,19 +190,6 @@ function navigateResult(direction: 'prev' | 'next') {
 }
 
 const popoverRect = ref({ x: 0, y: 0 })
-// function handleTooltipClick() {
-//   selection = window.getSelection()
-//   if (selection.rangeCount > 0) {
-//     fetchParaphrasedText(selection.toString())
-//     const range = selection?.getRangeAt(0)
-//     const rectPopover = range.getBoundingClientRect()
-//     popoverRect.value = {
-//       x: rectPopover.left,
-//       y: rectPopover.bottom,
-//     }
-//   }
-//   status.value = 'popover'
-// }
 function handleTooltipClick() {
   if (selection) {
     fetchParaphrasedText(selection?.toString())
@@ -230,7 +212,9 @@ function handleTooltipClick() {
     popoverRect.value = { x: left, y: top }
     status.value = 'popover'
   }
+  
 }
+
 
 async function fetchParaphrasedText(selectionText: any) {
   try {
@@ -848,11 +832,11 @@ textarea {
   // transform: translate(-50%, -50%);
   z-index: 100000;
   width: 30rem;
-  height: 17.5rem;
+  // height: 17.375rem;
   background-color: white;
   box-shadow: 0 0.375rem 0.75rem 0 rgba(0, 0, 0, 0.18);
   border-radius: 0.75rem;
-  padding:  1.8rem 1.5rem;
+  padding: 12px 12px 8px 12px;
 
 }
 .popoverHeader{
@@ -884,6 +868,9 @@ textarea {
   justify-content: space-between;
   align-items: center;
 
+}
+.popoverBody{
+  padding: 0 1rem 0 1rem;
 }
 .popoverBodyTop{
   display: flex;
@@ -919,7 +906,7 @@ textarea {
   background-color: #F8F8F8;
   color: #555555;
   padding: 0.75rem 0.5rem 0 1rem;
-  height: 7rem;
+  height: 7.5rem;
   overflow-y: auto;
   border-radius: 0.5rem;
 }
@@ -935,18 +922,21 @@ textarea {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  padding: 0.5rem 1rem 1rem 1rem;
 }
 .popoverBodyBottomBtn{
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin: 1rem 0.5rem;
+
   padding: 0.5rem 1rem;
-  border-radius: 9999px;
+  border-radius: 40px;
 }
 .popoverBodyBottomBtnCopy{
   border: 1px solid #E7E8EA;
   color: #6F6F6F;
+  margin-right: 0.5rem;
+
 }
 .popoverBodyBottomBtnApply{
   background-color:#4643DD;

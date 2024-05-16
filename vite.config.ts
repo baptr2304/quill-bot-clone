@@ -13,6 +13,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
+    //alias dùng để định nghĩa đường dẫn tuyệt đối
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },

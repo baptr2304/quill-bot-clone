@@ -132,7 +132,6 @@ function handleMouseUp() {
   if (selection?.toString().trim()) {
     const range = selection?.getRangeAt(0)
     const rect = range.getBoundingClientRect()
-    // xoa ket qua cu
     results.value = []
     currentIndex.value = 0
     replaceTextTooltip.value = ''
@@ -161,6 +160,10 @@ onMounted(() => {
   })
   document.addEventListener('mousemove', (e) => {
     mousePosition.value = { x: e.clientX, y: e.clientY }
+  })
+  document.addEventListener('mousedown', () => {
+    if (!isMouseInElement(tooltipRef.value) && !isMouseInElement(popoverRef.value))
+      status.value = 'initial'
   })
 })
 
@@ -211,6 +214,8 @@ function handleTooltipClick() {
 
     popoverRect.value = { x: left, y: top }
     status.value = 'popover'
+    
+    
   }
   
 }

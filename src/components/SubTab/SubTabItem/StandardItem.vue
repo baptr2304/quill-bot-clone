@@ -862,10 +862,18 @@ textarea {
 }
 .popoverHeaderLeft img{
   margin-right: 0.5rem;
+
 }
-// css img last child of div popoverHeaderLeft
+// css img first child of div popoverHeaderLeft
+.popoverHeader img:first-child{
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+}
 .popoverHeader img:last-child{
   cursor: pointer;
+  width: 2rem;
+  height: 2rem;
 }
 
 .popoverBodyTopCommon{
@@ -927,7 +935,8 @@ textarea {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 0.5rem 1rem 1rem 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
 }
 .popoverBodyBottomBtn{
   display: flex;
@@ -966,7 +975,7 @@ textarea {
 }
 .tooltipIcon img{
   width: 1.5rem;
-  height:1.5rem;
+  height: 1.5rem;
   margin: 0.5rem;
 
 }

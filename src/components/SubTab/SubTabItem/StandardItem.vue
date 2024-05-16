@@ -340,7 +340,7 @@ function closePopover() {
       }"
       @click="handleTooltipClick"
     >
-      <img src="@/assets/svg/bling-svgrepo-com.svg" alt="">
+      <img src="https://scontent.fsgn2-10.fna.fbcdn.net/v/t1.15752-9/440872940_970343401235581_2649794944878998265_n.png?_nc_cat=109&ccb=1-7&_nc_sid=5f2048&_nc_ohc=1RHZLYvp6SMQ7kNvgEtGa4M&_nc_oc=Adin3-Damq9sEn3uCXMpDAUrKPEruS8bNv3zi1TKQW90BpRW8botPrgst-0Wu5p-3ejxDRNdw8xcYtSd3iZ57pab&_nc_ht=scontent.fsgn2-10.fna&oh=03_Q7cD1QFS7wPKaIw4xL9ZlZhe6-XlXDgYkXV7RIAJuvwLYU_V1Q&oe=666D5C04" alt="">
     </div>
     <div
       v-else-if="status === 'popover' "
@@ -974,8 +974,8 @@ textarea {
   cursor: pointer;
 }
 .tooltipIcon img{
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1rem;
+  height: 1rem;
   margin: 0.5rem;
 
 }

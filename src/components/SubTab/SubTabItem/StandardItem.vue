@@ -101,7 +101,7 @@ function handleTrySampleText() {
   fetchAnswer()
 }
 type selectionStatus = 'initial' | 'tooltip' | 'popover'
-const status = ref<selectionStatus>('initial')
+const status = ref<selectionStatus>('popover')
 
 const boundingReact = ref({ x: 0, y: 0 })
 
@@ -148,9 +148,9 @@ onMounted(() => {
   document.addEventListener('selectionchange', () => {
     selection = window.getSelection()
 
-    if (!selection?.rangeCount || selection.toString().length === 0) 
+    if (!selection?.rangeCount || selection.toString().length === 0)
       return
-    
+
     const range = selection?.getRangeAt(0)
     const rect = range.getBoundingClientRect()
     boundingReact.value = {
@@ -180,7 +180,6 @@ function replaceSelectedText() {
   selection.removeAllRanges()
   closePopover()
 }
-
 
 // navigation results
 function navigateResult(direction: 'prev' | 'next') {
@@ -214,12 +213,8 @@ function handleTooltipClick() {
 
     popoverRect.value = { x: left, y: top }
     status.value = 'popover'
-    
-    
   }
-  
 }
-
 
 async function fetchParaphrasedText(selectionText: any) {
   try {
@@ -351,11 +346,11 @@ function closePopover() {
       }"
     >
       <div :class="$style.popoverHeader">
-        <div :class="$style.popoverHeaderLeft">
-          <img src="@/assets/svg/bling-svgrepo-com.svg" alt="">
-          <span>S-Group Paraphraser</span>
+        <img :class="$style.popoverHeaderLeft" src="@/assets/svg/bling-svgrepo-com.svg" alt="">
+        <span :class="$style.popoverHeaderMiddle">S-Group Paraphraser</span>
+        <div :class="$style.popoverHeaderRight">
+          <img src="@/assets/svg/svgStandardItem/cancel-close-delete-svgrepo-com.svg" alt="" @click="closePopover">
         </div>
-        <img src="@/assets/svg/svgStandardItem/cancel-close-delete-svgrepo-com.svg" alt="" @click="closePopover">
       </div>
       <div :class="$style.popoverBody">
         <div :class="$style.popoverBodyTop">
@@ -365,7 +360,7 @@ function closePopover() {
           </div>
           <div v-if="results?.length" :class="[$style.popoverBodyCount, $style.popoverBodyTopCommon]">
             <img src="@/assets/svg/svgStandardItem/left-arrow-backup-2-svgrepo-com.svg" alt="" @click="navigateResult('prev')">
-            <span>{{ currentIndex + 1 }} / {{ results?.length }}</span>
+            <span>{{ currentIndex + 1 }}/{{ results?.length }}</span>
             <img src="@/assets/svg/svgStandardItem/right-arrow-svgrepo-com.svg" alt="" @click="navigateResult('next')">
           </div>
         </div>
@@ -837,11 +832,14 @@ textarea {
   // transform: translate(-50%, -50%);
   z-index: 100000;
   width: 30rem;
-  // height: 17.375rem;
+  height: 17.375rem;
   background-color: white;
   box-shadow: 0 0.375rem 0.75rem 0 rgba(0, 0, 0, 0.18);
   border-radius: 0.75rem;
   padding: 12px 12px 8px 12px;
+  margin-left: 20px;
+  margin-top: 20px;
+  box-sizing: border-box;
 
 }
 .popoverHeader{
@@ -849,21 +847,13 @@ textarea {
   justify-content: space-between;
   align-items: center;
   font-size: 1rem;
+  margin-bottom: 0.5rem;
 }
 .popoverHeader img{
   width: 1.5rem;
   height: 1.5rem;
 }
-.popoverHeaderLeft{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #7B7B7B;
-}
-.popoverHeaderLeft img{
-  margin-right: 0.5rem;
 
-}
 // css img first child of div popoverHeaderLeft
 .popoverHeader img:first-child{
   cursor: pointer;
@@ -872,10 +862,23 @@ textarea {
 }
 .popoverHeader img:last-child{
   cursor: pointer;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.popoverHeaderRight{
   width: 2rem;
   height: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-
+.popoverHeaderMiddle{
+  flex-grow: 1;
+  font-weight: 600;
+  color: #555555;
+  line-height: 22px;
+  font-size: 1rem ;
+}
 .popoverBodyTopCommon{
   display: flex;
   justify-content: space-between;
@@ -891,14 +894,24 @@ textarea {
   color: #7B7B7B;
   font-size: 1rem;
   justify-content: space-between;
-  margin: 0.5rem 0;
+  // margin: 0.5rem 0;
 }
 .popoverBodyTopCommon img {
-  width: 1rem;
-  height: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.popoverBodyTopCommon span{
+  font-size: 0.75rem;
+}
+.popoverBodyCount img{
+  cursor: pointer;
+
 }
 .popoverBodyRefresh{
   cursor: pointer;
+}
+.popoverBodyRefresh span {
+  font-size: 0.75rem;
 }
 .popoverBodyRefresh img {
 &.loading{
@@ -918,10 +931,11 @@ textarea {
 .popoverBodyMiddle{
   background-color: #F8F8F8;
   color: #555555;
-  padding: 0.75rem 0.5rem 0 1rem;
+  margin-top: 0.3rem;
   height: 7.5rem;
   overflow-y: auto;
-  border-radius: 0.5rem;
+  border-radius: 0.625rem;
+  box-sizing: border-box;
 }
 // css scroll
 .popoverBodyMiddle::-webkit-scrollbar {
@@ -930,37 +944,48 @@ textarea {
 }
 .popoverBodyMiddle p{
   margin:0;
+  padding: 0.5rem;
+  font-size: 1rem;
 }
 .popoverBodyBottom{
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding-top: 0.5rem;
-  padding-bottom: 1rem;
+  margin-top: 0.5rem;
+  // padding-bottom: 1rem;
 }
 .popoverBodyBottomBtn{
   display: flex;
   justify-content: flex-end;
   align-items: center;
-
-  padding: 0.5rem 1rem;
-  border-radius: 40px;
+  padding: 0.375rem 0.75rem;
+  border-radius: 3rem;
+  min-height: 2.25rem;
+  cursor: pointer;
+ 
+}
+.popoverBodyBottomBtn span{
+  font-size: 0.875rem;
+  padding: 0 0.3rem;
 }
 .popoverBodyBottomBtnCopy{
-  border: 1px solid #E7E8EA;
+  border: 1px solid #DADCE0;
   color: #6F6F6F;
   margin-right: 0.5rem;
+
 
 }
 .popoverBodyBottomBtnApply{
   background-color:#4643DD;
   color:white;
-  cursor: pointer;
 }
 .popoverBodyBottomBtnApply img{
   width: 1rem;
   height: 1rem;
-  margin-right: 0.5rem;
+}
+.popoverBodyBottomBtnApply span{
+  padding: 0 0.3rem;
+  border-radius: 2.5rem;
 }
 .tooltipIcon{
   min-width: 2rem;

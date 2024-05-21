@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import { computePosition, flip, inline,offset, shift } from '@floating-ui/dom'
 import { useGetGenerativeModelGP } from '@/composables/useGetGenerativeModelGP.ts'
 
 interface Dieukien {
@@ -12,7 +13,7 @@ const props = defineProps<{
 }>()
 const { dieukien } = toRefs(props)
 function getTextParaphrased() {
-  return dieukien.value.paraphrased_text.replace(/{/g, '<span style="color: red">').replace(/}/g, '</span>')
+  return dieukien.value.paraphrased_text.replace(/\{/g, '<span style="color: red">').replace(/\}/g, '</span>')
 }
 const question = ref('')
 const placeholder = 'To rewrite text, enter or paste it here and press "Paraphrase".'
@@ -103,18 +104,80 @@ function handleTrySampleText() {
 type selectionStatus = 'initial' | 'tooltip' | 'popover'
 const status = ref<selectionStatus>('initial')
 
-const boundingReact = ref({ x: 0, y: 0 })
-
 let selection: Selection | null = null
+
+
+const childReacts = ref<Array<DOMRect>>([]) // lấy những thằng con
+const rect = ref(new DOMRect())// tao ra 1 DOM rect trong mac dinh la 0000
+const virtualElement = ref({ // tao 1 biến virtualElement , hàm này trả về retangle của rect
+  getBoundingClientRect() {
+    return rect.value
+  },
+  getClientRects() {
+    return [childReacts.value[childReacts.value.length - 1]] // trả về những thằng con của rect đó kiểu DOMRectList
+  },
+})
+
+async function attachTooltip() { // hàm này sẽ
+  if (tooltipRef.value) {
+    const { x, y, strategy } = await computePosition( // computePosition nay bat dong bo nen phai dung await
+      virtualElement.value,
+      tooltipRef.value,
+      {
+        strategy: 'fixed',
+        placement: 'right-end',
+        middleware: [
+
+        offset({
+          mainAxis:4,
+        }),
+        inline()
+
+        ],
+
+      },
+    )
+    tooltipRef.value.style.left = `${x}px`
+    tooltipRef.value.style.top = `${y}px`
+    tooltipRef.value.style.position = strategy
+  }
+
+  // trong doc virtualEl la 1 button, ấn vào thì hiện tooltip
+}
+async function attachPopover() { // hàm này sẽ
+  if (popoverRef.value) {
+    const { x, y, strategy } = await computePosition( // computePosition nay bat dong bo nen phai dung await
+      virtualElement.value,
+      popoverRef.value,
+      {
+        strategy: 'fixed',
+        placement: 'bottom-start',
+        middleware:[
+        flip({
+  fallbackAxisSideDirection: 'end',
+}),
+        offset({
+          mainAxis:150,
+        })
+        ]
+      },
+    )
+    popoverRef.value.style.left = `${x}px`
+    popoverRef.value.style.top = `${y}px`
+    popoverRef.value.style.position = strategy
+  }
+
+  // trong doc virtualEl la 1 button, ấn vào thì hiện tooltip
+}
 function isMouseInElement(e: HTMLElement | null) {
-  const rect = e?.getBoundingClientRect()
-  if (!mousePosition.value || !rect)
+  const vt = e?.getBoundingClientRect()
+  if (!mousePosition.value || !vt)
     return false
   return (
-    mousePosition.value.x >= rect.left
-    && mousePosition.value.x <= rect.right
-    && mousePosition.value.y >= rect.top
-    && mousePosition.value.y <= rect.bottom
+    mousePosition.value.x >= vt.left
+    && mousePosition.value.x <= vt.right
+    && mousePosition.value.y >= vt.top
+    && mousePosition.value.y <= vt.bottom
   )
 }
 function handleBlur() {
@@ -127,20 +190,21 @@ function handleBlur() {
     selection.removeAllRanges()
     selection.addRange(range)
   }
+  else {
+    status.value = 'initial'
+  }
 }
 function handleMouseUp() {
   if (selection?.toString().trim()) {
-    const range = selection?.getRangeAt(0)
-    const rect = range.getBoundingClientRect()
     results.value = []
     currentIndex.value = 0
     replaceTextTooltip.value = ''
-    boundingReact.value = { x: rect.right, y: rect.top }
     status.value = 'tooltip'
   }
   else {
     status.value = 'initial'
   }
+  nextTick(attachTooltip)
 }
 
 onMounted(() => {
@@ -152,19 +216,16 @@ onMounted(() => {
       return
 
     const range = selection?.getRangeAt(0)
-    const rect = range.getBoundingClientRect()
-    boundingReact.value = {
-      x: rect.right,
-      y: rect.top,
-    }
+    rect.value = range.getBoundingClientRect()
+    childReacts.value = Array.from(range.getClientRects())
   })
   document.addEventListener('mousemove', (e) => {
     mousePosition.value = { x: e.clientX, y: e.clientY }
   })
-  document.addEventListener('mousedown', () => {
-    if (!isMouseInElement(tooltipRef.value) && !isMouseInElement(popoverRef.value))
-      status.value = 'initial'
-  })
+  // document.addEventListener('mousedown', () => {
+  //   if (!isMouseInElement(tooltipRef.value) && !isMouseInElement(popoverRef.value))
+  //     status.value = 'initial'
+  // })
 })
 
 function replaceSelectedText() {
@@ -191,29 +252,12 @@ function navigateResult(direction: 'prev' | 'next') {
   replaceTextTooltip.value = results.value[currentIndex.value]
 }
 
-const popoverRect = ref({ x: 0, y: 0 })
 function handleTooltipClick() {
   if (selection) {
     fetchParaphrasedText(selection?.toString())
-    const range = selection?.getRangeAt(0)
-    const rect = range?.getBoundingClientRect()
-    const popoverWidth = 480
-    const popoverHeight = 280
-
-    let left = rect.left + (rect.width / 2) + window.scrollX - popoverWidth / 2
-    let top = rect.bottom + window.scrollY + 10
-
-    if (left < 0)
-      left = 10
-    else if (left + popoverWidth > window.innerWidth)
-      left = window.innerWidth - popoverWidth - 20
-
-    if (top + popoverHeight > window.innerHeight + window.scrollY)
-      top = rect.top + window.scrollY - popoverHeight - 10
-
-    popoverRect.value = { x: left, y: top }
     status.value = 'popover'
   }
+  nextTick(attachPopover)
 }
 
 async function fetchParaphrasedText(selectionText: any) {
@@ -328,9 +372,6 @@ function closePopover() {
     <!-- popover -->
     <div
       v-if="status === 'tooltip' && !isLoading" ref="tooltipRef" :class="$style.tooltipIcon" :style="{
-        top: `${boundingReact.y}px`,
-        left: `${boundingReact.x}px`,
-        position: 'fixed',
 
       }"
       @click="handleTooltipClick"
@@ -341,8 +382,15 @@ function closePopover() {
       v-else-if="status === 'popover' "
       ref="popoverRef"
       :class="$style.popover" :style="{
-        top: `${popoverRect.y}px`,
-        left: `${popoverRect.x}px`,
+        width: '480px',
+        height: '280px',
+        backgroundColor: 'white',
+        boxShadow: ' 0 0.375rem 0.75rem 0 rgba(0, 0, 0, 0.18)',
+        borderRadius: '0.75rem',
+        padding: '12px 12px 8px 12px',
+        boxSizing: 'border-box',
+        zIndex: '1',
+
       }"
     >
       <div :class="$style.popoverHeader">
@@ -828,18 +876,18 @@ textarea {
 }
 .popover{
   // display: none;
-  position: fixed;
+  // position: fixed;
   // transform: translate(-50%, -50%);
-  z-index: 100000;
-  width: 30rem;
-  height: 17.375rem;
-  background-color: white;
-  box-shadow: 0 0.375rem 0.75rem 0 rgba(0, 0, 0, 0.18);
-  border-radius: 0.75rem;
-  padding: 12px 12px 8px 12px;
-  margin-left: 20px;
-  margin-top: 20px;
-  box-sizing: border-box;
+  // z-index: 100000;
+  // width: 30rem;
+  // height: 17.375rem;
+  // background-color: white;
+  // box-shadow: 0 0.375rem 0.75rem 0 rgba(0, 0, 0, 0.18);
+  // border-radius: 0.75rem;
+  // padding: 12px 12px 8px 12px;
+  // margin-left: 20px;
+  // margin-top: 20px;
+  // box-sizing: border-box;
 
 }
 .popoverHeader{
@@ -962,7 +1010,7 @@ textarea {
   border-radius: 3rem;
   min-height: 2.25rem;
   cursor: pointer;
- 
+
 }
 .popoverBodyBottomBtn span{
   font-size: 0.875rem;
@@ -972,7 +1020,6 @@ textarea {
   border: 1px solid #DADCE0;
   color: #6F6F6F;
   margin-right: 0.5rem;
-
 
 }
 .popoverBodyBottomBtnApply{

@@ -101,7 +101,7 @@ function handleTrySampleText() {
   fetchAnswer()
 }
 type selectionStatus = 'initial' | 'tooltip' | 'popover'
-const status = ref<selectionStatus>('popover')
+const status = ref<selectionStatus>('initial')
 
 const boundingReact = ref({ x: 0, y: 0 })
 

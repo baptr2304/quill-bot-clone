@@ -15,6 +15,5 @@ declare module 'vue' {
     Sidebar: typeof import('./src/components/Layout/Sidebar.vue')['default']
     StandardItem: typeof import('./src/components/SubTab/SubTabItem/StandardItem.vue')['default']
     SubTab: typeof import('./src/components/SubTab/SubTab.vue')['default']
-    Test: typeof import('./src/components/SubTab/SubTabItem/test.vue')['default']
   }
 }

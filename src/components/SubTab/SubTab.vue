@@ -1,16 +1,9 @@
 <script setup lang="ts">
 // import StandardItem from './SubTabItem/StandardItem.vue'
 
-
 const props = defineProps<{
   language: string
 }>()
-
-
-const activeSubItem = ref('Standard')
-function openTab(tabName: string) {
-  activeSubItem.value = tabName
-}
 const levels = [
   {
     id: 1,
@@ -41,10 +34,10 @@ const levels = [
     language: 'English',
     premium: {
       title: 'Formal mode',
-      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      uses_tag: ['Research papers/reports', 'Essays', 'Professional presentations', 'Work/professional emails', 'Cover Letters', 'Technical and white papers'],
       input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
       paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
-    }
+    },
   },
   {
     id: 5,
@@ -52,10 +45,10 @@ const levels = [
     language: 'English',
     premium: {
       title: 'Academic mode',
-      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      uses_tag: ['Research papers/reports', 'Essays', 'Professional presentations', 'Work/professional emails', 'Cover Letters', 'Technical and white papers'],
       input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
       paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
-    }
+    },
   },
   {
     id: 6,
@@ -63,10 +56,10 @@ const levels = [
     language: 'English',
     premium: {
       title: 'Simple mode',
-      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      uses_tag: ['Research papers/reports', 'Essays', 'Professional presentations', 'Work/professional emails', 'Cover Letters', 'Technical and white papers'],
       input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
       paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
-    }
+    },
   },
   {
     id: 7,
@@ -74,10 +67,10 @@ const levels = [
     language: 'English',
     premium: {
       title: 'Creative mode',
-      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      uses_tag: ['Research papers/reports', 'Essays', 'Professional presentations', 'Work/professional emails', 'Cover Letters', 'Technical and white papers'],
       input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
       paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
-    }
+    },
   },
   {
     id: 8,
@@ -85,10 +78,10 @@ const levels = [
     language: 'English',
     premium: {
       title: 'Expand mode',
-      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      uses_tag: ['Research papers/reports', 'Essays', 'Professional presentations', 'Work/professional emails', 'Cover Letters', 'Technical and white papers'],
       input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
       paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
-    }
+    },
   },
   {
     id: 9,
@@ -96,10 +89,10 @@ const levels = [
     language: 'English',
     premium: {
       title: 'Shorten mode',
-      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      uses_tag: ['Research papers/reports', 'Essays', 'Professional presentations', 'Work/professional emails', 'Cover Letters', 'Technical and white papers'],
       input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
       paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
-    }
+    },
   },
   {
     id: 10,
@@ -107,47 +100,73 @@ const levels = [
     language: 'English',
     premium: {
       title: 'Custom mode',
-      uses_tag: ['Research papers/reports', 'Essays','Professional presentations', 'Work/professional emails,','Cover Letters', 'Technical and white papers'],
+      uses_tag: ['Research papers/reports', 'Essays', 'Professional presentations', 'Work/professional emails', 'Cover Letters', 'Technical and white papers'],
       input_text: 'Agriculture’s chronicle is a testament to human ingenuity’s evolution.',
       paraphrased_text: 'The {transition} to an agrarian society spanned several millennia.',
-    }
+    },
   },
-  
+
 ]
 
-const itemActive = computed(() => levels.find(item => item.name === activeSubItem.value))
-function shouldShowTab(item : any) {
-  const currentLanguage = props.language.toLowerCase(); // Lấy giá trị ngôn ngữ hiện tại
-  if (currentLanguage === 'english') 
-    return true; // Nếu là 'English', hiển thị tất cả các tabs
-   else 
-    return item.name === 'Standard'; // Nếu không phải 'English', chỉ hiển thị 'Standard'
-  
+const visibleTabs = ref(levels.slice(0, 10)) // Hiển thị tối đa 3 tab
+const hiddenTabs = ref(levels.slice(10)) // Các tab còn lại trong danh sách thả xuống
+const showMoreDropdown = ref(false) // Trạng thái hiển thị của danh sách thả xuống
+function toggleMoreDropdown() {
+  showMoreDropdown.value = !showMoreDropdown.value
 }
 
+function handleResize() {
+  if ( window.innerWidth > 1000 && window.innerWidth <= 1024) { // Điều chỉnh ngưỡng kích thước theo yêu cầu của bạn
+    visibleTabs.value = levels.slice(0, 5) // Hiển thị tối đa 1 tab
+    hiddenTabs.value = levels.slice(5)
+  }
+  if(window.innerWidth <= 1000 && window.innerWidth > 768) {
+    visibleTabs.value = levels.slice(0, 3) // Hiển thị tối đa 1 tab
+    hiddenTabs.value = levels.slice(3)
+  }
+  if(window.innerWidth <= 768) {
+    visibleTabs.value = levels.slice(0, 1) // Hiển thị tối đa 1 tab
+    hiddenTabs.value = levels.slice(1)
+  }
+}
+
+// Gọi hàm handleResize khi tải trang và khi thay đổi kích thước
+window.addEventListener('resize', handleResize)
+onMounted(() => handleResize())
+const activeSubItem = ref('Standard')
+function openTab(tabName: string) {
+  activeSubItem.value = tabName
+}
+
+const itemActive = computed(() => levels.find(item => item.name === activeSubItem.value))
+function shouldShowTab(item: any) {
+  const currentLanguage = props.language.toLowerCase() // Lấy giá trị ngôn ngữ hiện tại
+  if (currentLanguage === 'english')
+    return true // Nếu là 'English', hiển thị tất cả các tabs
+  else
+    return item.name === 'Standard' // Nếu không phải 'English', chỉ hiển thị 'Standard'
+}
 </script>
 
 <template>
-  <!-- <div class="header">
-    <div v-for="item in levels" :key="item.id">
-      <button v-if="item.language === 'All' || item.language.toLowerCase() === language">
-        {{ item.name }}
-      </button>
-      <TextOutput v-if="item?.premium" :dieukien="item?.premium" />
-
-    </div>
-  </div> -->
   <div :class="$style.subTab">
     <div :class="$style.subTabText">
       <span>Modes:&nbsp;</span>
     </div>
-    <div v-for="item in levels" :key="item.id">
+    <div v-for="item in visibleTabs" :key="item.id">
       <div v-if="shouldShowTab(item)" :class="[$style.subTabItem, activeSubItem === item.name ? $style.activeSubItem : '']" @click="openTab(item.name)">
         <span :class="activeSubItem === item.name ? $style.activeSpan : ''">{{ item.name }}</span>
       </div>
     </div>
-    <!---->
-    <div  v-if="props.language.toLowerCase() === 'english'" :class="$style.subTabRange">
+    <div v-if="hiddenTabs.length > 0" :class="[$style.subTabItem, $style.moreTab]" @click="toggleMoreDropdown">
+      <span>More</span>
+      <div v-if="showMoreDropdown" :class="$style.subTabDropDown">
+        <div v-for="item in hiddenTabs" :key="item.id" :class="[$style.dropDownItem, activeSubItem === item.name ? $style.activeSubItem : '']" @click="openTab(item.name)">
+          <span :class="activeSubItem === item.name ? $style.activeSpan : ''">{{ item.name }}</span>
+        </div>
+      </div>
+    </div>
+    <div v-if="props.language.toLowerCase() === 'english'" :class="$style.subTabRange">
       <span :class="$style.subTabText">Synonyms: &nbsp;</span>
       <input id="vol" type="range" name="vol" min="0" max="100" value="50">
     </div>
@@ -155,7 +174,7 @@ function shouldShowTab(item : any) {
   </div>
   <div v-for="item in levels" :key="item.id">
     <div v-if="activeSubItem === item.name" :class="[$style.subTabContents, activeSubItem === item.name ? $style.activeSubTab : '']">
-      <StandardItem :dieukien="itemActive?.premium"/>
+      <StandardItem :dieukien="itemActive?.premium" />
     </div>
   </div>
 </template>
@@ -225,5 +244,29 @@ input[type=range] {
   // -webkit-appearance: none;
   width: 6.25rem;
   height: 0.3rem;
+}
+.subTabDropDown{
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  z-index: 1;
+  margin-top: 0.5rem;
+  width: 10rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+.dropDownItem{
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+}
+.moreTab {
+  display: none;
+}
+@media screen and (max-width: 1024px) {
+  .moreTab {
+    display: block;
+  }
 }
 </style>

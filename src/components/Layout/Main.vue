@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 
 const showAllItem = ref(false);
 const activeSubItem = ref('');
@@ -87,7 +86,7 @@ function toggleAllItem() {
   .main {
     flex-grow: 1;
     background-color: #f1f1f1;
-    margin-top:3rem;
+    margin-top:3rem; 
   }
 
   .tabArea {

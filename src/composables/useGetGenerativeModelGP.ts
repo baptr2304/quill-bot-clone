@@ -2,18 +2,18 @@ import { useGenAi } from './useGenAi'
 
 export async function useGetGenerativeModelGP(prompt: any) {
   const model = await useGenAi('gemini-pro')
-  prompt = `You are a helpful paraphraser.
-  You should return the response in the language of the original text.
-  Do not alter the meaning of the text.
-  You must only reply with the paraphrased text, without any additional comments or explanations.
-  Note: If the original language is English, respond in English; if it is Vietnamese, respond in Vietnamese, and similarly for other languages.
-  For example:
-    Prompt: Cats are very cute animals.
-    Response: Cats are remarkably endearing animals.
-  Another example:
-    Prompt: Tôi đẹp.
-    Response: Tôi cực kỳ xinh đẹp.
-  Now, please paraphrase the following question and provide a response:
+  prompt = `You can paraphrase things rather well.
+  The response must be sent back in the original text's language.
+  Don't change the text's meaning.
+  You must just respond with the passage that has been paraphrased; no more remarks or justifications are allowed.
+  React in English if it is the original language; reply in Vietnamese if it is the original language, and so on.
+  As an illustration:
+    Prompt: Cats are really adorable pets.
+    Reaction: Cats are really cute creatures.
+  One more instance:
+    Request: Tôi đẹp.
+    In response, Tôi kỳ xinh đẹp cực.
+  Now, could you please rephrase this query and answer it?
     ${prompt}
   `
   const result = await model.generateContent(prompt)

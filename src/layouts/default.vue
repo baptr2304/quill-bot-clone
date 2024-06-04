@@ -7,19 +7,18 @@
       <Header />
       <div style="display: flex;">
         <Sidebar />
-        <Main />
+        <RouterView />
       </div>
     </div>
-
-    <RouterView />
+   
   </div>
 </template>
 
 <style lang="scss" module>
-.layout {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow-x: hidden;
-}
+// .layout {
+//   display: flex;
+//   flex-direction: column;
+//   position: relative;
+//   overflow-x: hidden;
+// }
 </style>

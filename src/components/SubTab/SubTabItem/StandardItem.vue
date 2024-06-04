@@ -1,6 +1,12 @@
 <script setup lang='ts'>
-import { computePosition, flip, inline,offset, shift } from '@floating-ui/dom'
+import { computePosition, flip, inline, offset } from '@floating-ui/dom'
+// import { getSelection, setSelection } from '@/core/index.ts'
 import { useGetGenerativeModelGP } from '@/composables/useGetGenerativeModelGP.ts'
+
+const props = defineProps<{
+  dieukien: Dieukien
+}>()
+// const divRef = ref<HTMLElement>()
 
 interface Dieukien {
   title: string
@@ -8,9 +14,6 @@ interface Dieukien {
   input_text: string
   paraphrased_text: string
 }
-const props = defineProps<{
-  dieukien: Dieukien
-}>()
 const { dieukien } = toRefs(props)
 function getTextParaphrased() {
   return dieukien.value.paraphrased_text.replace(/\{/g, '<span style="color: red">').replace(/\}/g, '</span>')
@@ -106,7 +109,6 @@ const status = ref<selectionStatus>('initial')
 
 let selection: Selection | null = null
 
-
 const childReacts = ref<Array<DOMRect>>([]) // lấy những thằng con
 const rect = ref(new DOMRect())// tao ra 1 DOM rect trong mac dinh la 0000
 const virtualElement = ref({ // tao 1 biến virtualElement , hàm này trả về retangle của rect
@@ -128,10 +130,10 @@ async function attachTooltip() { // hàm này sẽ
         placement: 'right-end',
         middleware: [
 
-        offset({
-          mainAxis:4,
-        }),
-        inline()
+          offset({
+            mainAxis: 4,
+          }),
+          inline(),
 
         ],
 
@@ -152,14 +154,14 @@ async function attachPopover() { // hàm này sẽ
       {
         strategy: 'fixed',
         placement: 'bottom-start',
-        middleware:[
-        flip({
-  fallbackAxisSideDirection: 'end',
-}),
-        offset({
-          mainAxis:150,
-        })
-        ]
+        middleware: [
+          flip({
+            fallbackAxisSideDirection: 'end',
+          }),
+          offset({
+            mainAxis: 150,
+          }),
+        ],
       },
     )
     popoverRef.value.style.left = `${x}px`
@@ -170,16 +172,17 @@ async function attachPopover() { // hàm này sẽ
   // trong doc virtualEl la 1 button, ấn vào thì hiện tooltip
 }
 function isMouseInElement(e: HTMLElement | null) {
-  const vt = e?.getBoundingClientRect()
-  if (!mousePosition.value || !vt)
+  const pos = e?.getBoundingClientRect()
+  if (!mousePosition.value || !pos)
     return false
   return (
-    mousePosition.value.x >= vt.left
-    && mousePosition.value.x <= vt.right
-    && mousePosition.value.y >= vt.top
-    && mousePosition.value.y <= vt.bottom
+    mousePosition.value.x >= pos.left
+    && mousePosition.value.x <= pos.right
+    && mousePosition.value.y >= pos.top
+    && mousePosition.value.y <= pos.bottom
   )
 }
+
 function handleBlur() {
   if (!selection?.anchorNode || !selection?.focusNode)
     return
@@ -195,15 +198,10 @@ function handleBlur() {
   }
 }
 function handleMouseUp() {
-  if (selection?.toString().trim()) {
-    results.value = []
-    currentIndex.value = 0
-    replaceTextTooltip.value = ''
-    status.value = 'tooltip'
-  }
-  else {
-    status.value = 'initial'
-  }
+  selection = window.getSelection()
+  if (!selection || selection.toString().length === 0)
+    return
+  status.value = 'tooltip'
   nextTick(attachTooltip)
 }
 
@@ -212,20 +210,21 @@ onMounted(() => {
   document.addEventListener('selectionchange', () => {
     selection = window.getSelection()
 
-    if (!selection?.rangeCount || selection.toString().length === 0)
+    if (!selection?.rangeCount || selection.toString().length === 0){
+      status.value = 'initial'
       return
+    }
+    
 
     const range = selection?.getRangeAt(0)
     rect.value = range.getBoundingClientRect()
     childReacts.value = Array.from(range.getClientRects())
   })
+
   document.addEventListener('mousemove', (e) => {
     mousePosition.value = { x: e.clientX, y: e.clientY }
   })
-  // document.addEventListener('mousedown', () => {
-  //   if (!isMouseInElement(tooltipRef.value) && !isMouseInElement(popoverRef.value))
-  //     status.value = 'initial'
-  // })
+
 })
 
 function replaceSelectedText() {
@@ -301,7 +300,10 @@ function closePopover() {
 </script>
 
 <template>
-  <div ref="boxAB" :class="$style.textArea">
+  <!-- <div id="contentEditableDiv" ref="divRef" style=" width: 200px; " contenteditable>
+    Hello <b>World</b>
+  </div> -->
+  <div ref="boxAB" :class="$style.textArea" >
     <form
       ref="boxA" :class="[$style.textAreaItem, $style.textAreaItemLeft]" @input="checkTrash"
       @submit.prevent="fetchAnswer"
@@ -427,9 +429,9 @@ function closePopover() {
       </div>
     </div>
     <div
-      id="bounding" ref="boxB" contenteditable
+      id="bounding" ref="boxB" :contenteditable="!dieukien"
       :class="[$style.textAreaItem, $style.textAreaItemRight]"
-      @blur="handleBlur" @mouseup="handleMouseUp"
+      @blur="handleBlur" @mouseup="handleMouseUp" 
     >
       <div v-if="dieukien" :class="$style.textOutputPremiumContainer">
         <div :class="$style.textOutputPremium">
@@ -476,9 +478,7 @@ function closePopover() {
       <span v-else-if="isLoading">
         Loading...
       </span>
-      <span v-else-if="answer">
-        {{ answer }}
-      </span>
+      <span v-else-if="answer" v-html="answer" />
 
       <!-- popup -->
       <div v-if="showPopup" :class="$style.popup">
@@ -527,6 +527,7 @@ function closePopover() {
   background-color: #ffffff;
   max-width: 100%;
   // scroll
+  justify-content: space-between;
 
 }
 
@@ -550,11 +551,6 @@ textarea {
   background-color: #ffffff;
   margin-top: 1rem;
 }
-// css scroll
-// .textAreaItemLeftTextArea::-webkit-scrollbar {
-//   width: 0.5rem;
-// }
-// css scroll color
 
 .textAreaItemTrashBin {
   position: absolute;
@@ -570,7 +566,7 @@ textarea {
 }
 
 .textAreaItemRight {
-  // padding-right: 1.2rem;
+  padding-right: 1.2rem;
   border-radius: 0 0 1rem 0;
   margin-top: 1rem;
 }
@@ -752,12 +748,12 @@ textarea {
 }
 
 .textOutputPremiumTag{
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+
   list-style: none;
 
 }
 .textOutputPremiumTag li {
+  display: inline-block;
   padding: 0.375rem;
   margin: 0.375rem;
   border-radius: 0.5rem;

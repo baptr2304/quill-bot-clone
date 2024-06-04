@@ -3,7 +3,7 @@
 </script>
 
 <template>
-        <h1></h1>
+          <Main />
 </template>
 
 <style lang="scss" module>

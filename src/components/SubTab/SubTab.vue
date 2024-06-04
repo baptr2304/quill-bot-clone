@@ -116,7 +116,7 @@ function toggleMoreDropdown() {
 }
 
 function handleResize() {
-  if ( window.innerWidth > 1000 && window.innerWidth <= 1024) { // Điều chỉnh ngưỡng kích thước theo yêu cầu của bạn
+  if ( window.innerWidth > 1000 && window.innerWidth <= 1286) { // Điều chỉnh ngưỡng kích thước theo yêu cầu của bạn
     visibleTabs.value = levels.slice(0, 5) // Hiển thị tối đa 1 tab
     hiddenTabs.value = levels.slice(5)
   }

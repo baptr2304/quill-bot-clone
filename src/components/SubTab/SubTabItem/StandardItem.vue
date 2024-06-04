@@ -112,12 +112,8 @@ let selection: Selection | null = null
 const childReacts = ref<Array<DOMRect>>([]) // lấy những thằng con
 const rect = ref(new DOMRect())// tao ra 1 DOM rect trong mac dinh la 0000
 const virtualElement = ref({ // tao 1 biến virtualElement , hàm này trả về retangle của rect
-  getBoundingClientRect() {
-    return rect.value
-  },
-  getClientRects() {
-    return [childReacts.value[childReacts.value.length - 1]] // trả về những thằng con của rect đó kiểu DOMRectList
-  },
+  getBoundingClientRect: () => rect.value,
+  getClientRects: () => [childReacts.value[childReacts.value.length - 1]] // trả về những thằng con của rect đó kiểu DOMRectList,
 })
 
 async function attachTooltip() { // hàm này sẽ
@@ -210,7 +206,7 @@ onMounted(() => {
   document.addEventListener('selectionchange', () => {
     selection = window.getSelection()
 
-    if (!selection?.rangeCount || selection.toString().length === 0){
+    if (!selection?.rangeCount || selection.toString().length === 0) {
       status.value = 'initial'
       return
     }
@@ -223,7 +219,6 @@ onMounted(() => {
   document.addEventListener('mousemove', (e) => {
     mousePosition.value = { x: e.clientX, y: e.clientY }
   })
-
 })
 
 function replaceSelectedText() {
@@ -302,14 +297,13 @@ function closePopover() {
   <!-- <div id="contentEditableDiv" ref="divRef" style=" width: 200px; " contenteditable>
     Hello <b>World</b>
   </div> -->
-  <div ref="boxAB" :class="$style.textArea" >
+  <div ref="boxAB" :class="$style.textArea">
     <form
       ref="boxA" :class="[$style.textAreaItem, $style.textAreaItemLeft]" @input="checkTrash"
       @submit.prevent="fetchAnswer"
     >
       <textarea
-        v-model="question"
-        name="question" :class="$style.textAreaItemLeftTextArea"
+        v-model="question" name="question" :class="$style.textAreaItemLeftTextArea"
         :placeholder="placeholder"
       />
       <div :class="$style.textAreaFooter">
@@ -373,16 +367,17 @@ function closePopover() {
     <!-- popover -->
     <div
       v-if="status === 'tooltip' && !isLoading" ref="tooltipRef" :class="$style.tooltipIcon" :style="{
-
-      }"
-      @click="handleTooltipClick"
+        position: 'fixed',
+        zIndex: '10',
+      }" @click="handleTooltipClick"
     >
-      <img src="https://scontent.fsgn2-10.fna.fbcdn.net/v/t1.15752-9/440872940_970343401235581_2649794944878998265_n.png?_nc_cat=109&ccb=1-7&_nc_sid=5f2048&_nc_ohc=1RHZLYvp6SMQ7kNvgEtGa4M&_nc_oc=Adin3-Damq9sEn3uCXMpDAUrKPEruS8bNv3zi1TKQW90BpRW8botPrgst-0Wu5p-3ejxDRNdw8xcYtSd3iZ57pab&_nc_ht=scontent.fsgn2-10.fna&oh=03_Q7cD1QFS7wPKaIw4xL9ZlZhe6-XlXDgYkXV7RIAJuvwLYU_V1Q&oe=666D5C04" alt="">
+      <img
+        src="https://scontent.fsgn2-10.fna.fbcdn.net/v/t1.15752-9/440872940_970343401235581_2649794944878998265_n.png?_nc_cat=109&ccb=1-7&_nc_sid=5f2048&_nc_ohc=1RHZLYvp6SMQ7kNvgEtGa4M&_nc_oc=Adin3-Damq9sEn3uCXMpDAUrKPEruS8bNv3zi1TKQW90BpRW8botPrgst-0Wu5p-3ejxDRNdw8xcYtSd3iZ57pab&_nc_ht=scontent.fsgn2-10.fna&oh=03_Q7cD1QFS7wPKaIw4xL9ZlZhe6-XlXDgYkXV7RIAJuvwLYU_V1Q&oe=666D5C04"
+        alt=""
+      >
     </div>
     <div
-      v-else-if="status === 'popover' "
-      ref="popoverRef"
-      :class="$style.popover" :style="{
+      v-else-if="status === 'popover'" ref="popoverRef" :class="$style.popover" :style="{
         width: '480px',
         height: '280px',
         backgroundColor: 'white',
@@ -404,11 +399,17 @@ function closePopover() {
       <div :class="$style.popoverBody">
         <div :class="$style.popoverBodyTop">
           <div :class="[$style.popoverBodyRefresh, $style.popoverBodyTopCommon]" @click="refreshText">
-            <img src="@/assets/svg/svgStandardItem/refresh-ccw-svgrepo-com.svg" :class="[isRefreshing === true && $style.loading]" alt="">
+            <img
+              src="@/assets/svg/svgStandardItem/refresh-ccw-svgrepo-com.svg"
+              :class="[isRefreshing === true && $style.loading]" alt=""
+            >
             <span>Refresh</span>
           </div>
           <div v-if="results?.length" :class="[$style.popoverBodyCount, $style.popoverBodyTopCommon]">
-            <img src="@/assets/svg/svgStandardItem/left-arrow-backup-2-svgrepo-com.svg" alt="" @click="navigateResult('prev')">
+            <img
+              src="@/assets/svg/svgStandardItem/left-arrow-backup-2-svgrepo-com.svg" alt=""
+              @click="navigateResult('prev')"
+            >
             <span>{{ currentIndex + 1 }}/{{ results?.length }}</span>
             <img src="@/assets/svg/svgStandardItem/right-arrow-svgrepo-com.svg" alt="" @click="navigateResult('next')">
           </div>
@@ -428,75 +429,72 @@ function closePopover() {
       </div>
     </div>
     <div
-      id="bounding" ref="boxB" :contenteditable="!dieukien"
-      :class="[$style.textAreaItem, $style.textAreaItemRight]"
-      @blur="handleBlur" @mouseup="handleMouseUp"  
-    >
-      <div v-if="dieukien" :class="$style.textOutputPremiumContainer">
-        <div :class="$style.textOutputPremium">
-          <div :class="$style.textOutputPremiumTop">
-            <h2>{{ dieukien?.title }}</h2>
-            <br>
-            <p>Uses</p>
-            <ul :class="$style.textOutputPremiumTag">
-              <li v-for="item in dieukien.uses_tag" :key="item">
-                {{ item }}
-              </li>
-            </ul>
-            <br>
-          </div>
-          <div :class="$style.textOutputPremiumBottom">
-            <div :class="[$style.textOutputPremiumBottomItem, $style.textOutputPremiumBottomItemLeft]">
-              <p>INPUT TEXT</p>
-              <span>{{ dieukien?.input_text }}</span>
-            </div>
-            <div :class="$style.separationItem">
-              <img src="@/assets/svg/arrow-sm-right-svgrepo-com.svg" alt="">
-            </div>
-            <div :class="[$style.textOutputPremiumBottomItem, $style.textOutputPremiumBottomItemRight]">
-              <p>
-                PARAPHRASED TEXT
-              </p>
-              <span
-                v-html="getTextParaphrased()"
-              />
-            </div>
-          </div>
+      id="bounding" ref="boxB" contenteditable :class="[$style.textAreaItem, $style.textAreaItemRight]"
+      @blur="handleBlur" @mouseup.stop="handleMouseUp"
+    />
+
+    <div v-if="dieukien" :class="$style.textOutputPremiumContainer">
+      <div :class="$style.textOutputPremium">
+        <div :class="$style.textOutputPremiumTop">
+          <h2>{{ dieukien?.title }}</h2>
+          <br>
+          <p>Uses</p>
+          <ul :class="$style.textOutputPremiumTag">
+            <li v-for="item in dieukien.uses_tag" :key="item">
+              {{ item }}
+            </li>
+          </ul>
+          <br>
         </div>
-        <div :class="$style.UpgradeItem">
-          <div :class="$style.UpgradeItemBtn">
-            <img src="@/assets/svg/diamond-svgrepo-com.svg" alt="">
-            <span>Unlock Premium Modes</span>
+        <div :class="$style.textOutputPremiumBottom">
+          <div :class="[$style.textOutputPremiumBottomItem, $style.textOutputPremiumBottomItemLeft]">
+            <p>INPUT TEXT</p>
+            <span>{{ dieukien?.input_text }}</span>
           </div>
-          <div :class="$style.UpgradeItemSuggest">
-            <span>3-Day Money-Back Guarantee</span>
-            <img src="@/assets/svg/like-svgrepo-com.svg" alt="">
+          <div :class="$style.separationItem">
+            <img src="@/assets/svg/arrow-sm-right-svgrepo-com.svg" alt="">
+          </div>
+          <div :class="[$style.textOutputPremiumBottomItem, $style.textOutputPremiumBottomItemRight]">
+            <p>
+              PARAPHRASED TEXT
+            </p>
+            <span v-html="getTextParaphrased()" />
           </div>
         </div>
       </div>
-      <span v-else-if="isLoading">
-        Loading...
-      </span>
-      <span v-else-if="answer" v-html="answer" />
+      <div :class="$style.UpgradeItem">
+        <div :class="$style.UpgradeItemBtn">
+          <img src="@/assets/svg/diamond-svgrepo-com.svg" alt="">
+          <span>Unlock Premium Modes</span>
+        </div>
+        <div :class="$style.UpgradeItemSuggest">
+          <span>3-Day Money-Back Guarantee</span>
+          <img src="@/assets/svg/like-svgrepo-com.svg" alt="">
+        </div>
+      </div>
+    </div>
+    <span v-else-if="isLoading">
+      Loading...
+    </span>
+    <span v-else-if="answer" v-html="answer" />
 
-      <!-- popup -->
-      <div v-if="showPopup" :class="$style.popup">
-        <div :class="$style.popupContent">
-          <div :class="$style.popupHeader">
-            <h2>Delete Text</h2>
-            <img src="/src/assets/svg/cancel-svgrepo-com.svg" @click="closePopup">
+    <!-- popup -->
+    <div v-if="showPopup" :class="$style.popup">
+      <div :class="$style.popupContent">
+        <div :class="$style.popupHeader">
+          <h2>Delete Text</h2>
+          <img src="/src/assets/svg/cancel-svgrepo-com.svg" @click="closePopup">
+        </div>
+        <div :class="$style.popupHeader">
+          <p>You’re about to delete the Original and Paraphrased text.</p>
+        </div>
+        <div :class="$style.popupFooter">
+          <div :class="$style.popupFooterCheckbox">
+            <input type="checkbox">
+            <label>Don't show again</label>
           </div>
-          <div :class="$style.popupHeader">
-            <p>You’re about to delete the Original and Paraphrased text.</p>
-          </div>
-          <div :class="$style.popupFooter">
-            <div :class="$style.popupFooterCheckbox">
-              <input type="checkbox">
-              <label>Don't show again</label>
-            </div>
-            <div :class="$style.popupFooterText" @click="deleteItem">
-              Continue
-            </div>
+          <div :class="$style.popupFooterText" @click="deleteItem">
+            Continue
           </div>
         </div>
       </div>
@@ -508,6 +506,7 @@ function closePopover() {
 [contenteditable] {
   outline: 0px solid transparent;
 }
+
 .textArea {
   display: flex;
   width: 100%;
@@ -516,7 +515,7 @@ function closePopover() {
   justify-content: space-between;
   position: relative;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
-  border-radius: 0  0 1rem 1rem;
+  border-radius: 0 0 1rem 1rem;
 }
 
 .textAreaItem {
@@ -530,15 +529,14 @@ function closePopover() {
 
 }
 
-textarea {
-
-}
+textarea {}
 
 .textAreaItemLeft {
   padding-left: 1.2rem;
   position: relative;
   border-radius: 0 0 0 1rem;
 }
+
 .textAreaItemLeftTextArea {
   font-size: 1rem;
   min-height: 22rem;
@@ -569,6 +567,7 @@ textarea {
   border-radius: 0 0 1rem 0;
   margin-top: 1rem;
 }
+
 .textAreaItemRight p {
   font-size: 1rem;
 }
@@ -717,40 +716,47 @@ textarea {
   margin-top: 0.2rem;
 
 }
-.textOutputPremium{
+
+.textOutputPremium {
   border-radius: 0.5rem;
   margin-top: 1rem;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
 
 }
-.textOutputPremium hr{
+
+.textOutputPremium hr {
   margin: 0;
   color: #E2E4E6;
 }
-.textOutputPremium h2{
+
+.textOutputPremium h2 {
   text-align: center;
   margin: 0;
 }
-.textOutputPremium p{
+
+.textOutputPremium p {
   margin: 0;
   font-size: 0.75rem;
   font-weight: 600;
 }
-.textOutputPremiumTop{
+
+.textOutputPremiumTop {
   padding: 0.5rem 1rem 0 1rem;
   border-bottom: 1px solid #E2E4E6;
 }
+
 .textOutputPremiumBottom {
   padding: 0.7rem 1rem;
   display: flex;
 
 }
 
-.textOutputPremiumTag{
+.textOutputPremiumTag {
 
   list-style: none;
 
 }
+
 .textOutputPremiumTag li {
   display: inline-block;
   padding: 0.375rem;
@@ -759,22 +765,27 @@ textarea {
   background-color: #FEF8E8;
   font-size: 0.875rem;
 }
-.textOutputPremiumBottomItem{
+
+.textOutputPremiumBottomItem {
   padding: 0.5rem 0;
 
 }
-.textOutputPremiumBottomItem p:first-child{
+
+.textOutputPremiumBottomItem p:first-child {
   font-size: 0.75rem;
   margin-bottom: 0.5rem;
 
 }
-.textOutputPremiumBottomItem span{
+
+.textOutputPremiumBottomItem span {
   font-size: 1.125rem;
 
 }
-.textOutputPremiumBottomItemRight p{
+
+.textOutputPremiumBottomItemRight p {
   color: var(--color-primary);
 }
+
 .separationItem {
   width: 2.5rem;
   height: 1.5rem;
@@ -787,7 +798,8 @@ textarea {
   align-self: center;
   position: relative;
 }
-.separationItem::before{
+
+.separationItem::before {
   content: '';
   width: 0.1rem;
   height: 2.8rem;
@@ -797,7 +809,8 @@ textarea {
   left: 50%;
   transform: translate(-50%, -50%);
 }
-.separationItem::after{
+
+.separationItem::after {
   content: '';
   width: 0.1rem;
   height: 2.8rem;
@@ -807,12 +820,14 @@ textarea {
   left: 50%;
   transform: translate(-50%, -50%);
 }
-.separationItem img{
+
+.separationItem img {
   width: 0.875rem;
   height: .875rem;
 
 }
-.UpgradeItem{
+
+.UpgradeItem {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -820,7 +835,8 @@ textarea {
   flex-direction: column;
 
 }
-.UpgradeItemBtn{
+
+.UpgradeItemBtn {
   background-color: var(--color-primary);
   // padding: 0.5rem 0.844rem;
   height: 2.313rem;
@@ -830,17 +846,19 @@ textarea {
   align-items: center;
   width: 40%;
   font-size: 1rem;
-    font-weight: 600;
-    white-space: nowrap;
-    color: white;
-    cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  color: white;
+  cursor: pointer;
 }
-.UpgradeItem img{
+
+.UpgradeItem img {
   width: 1.125rem;
   height: 1.125rem;
   margin-right: 0.5rem;
 }
-.UpgradeItemSuggest{
+
+.UpgradeItemSuggest {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -848,28 +866,32 @@ textarea {
   margin-left: 1rem;
   margin-top: 0.5rem;
 }
-.UpgradeItemSuggest span{
+
+.UpgradeItemSuggest span {
   font-size: 0.75rem;
   font-weight: 600;
   color: #5F6368;
   margin-right: 0.5rem;
 }
-.UpgradeItemSuggest img{
+
+.UpgradeItemSuggest img {
   width: 1rem;
   height: 1rem;
 
 }
+
 // .tooltipChangeData{
 //   background-color: red;
 //   width: 20px;
 //   height:20px;
 // }
-.imgReplace{
+.imgReplace {
   width: 1rem;
   height: 1rem;
   margin-left: 0.5rem;
 }
-.popover{
+
+.popover {
   // display: none;
   // position: fixed;
   // transform: translate(-50%, -50%);
@@ -885,53 +907,61 @@ textarea {
   // box-sizing: border-box;
 
 }
-.popoverHeader{
+
+.popoverHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 1rem;
   margin-bottom: 0.5rem;
 }
-.popoverHeader img{
+
+.popoverHeader img {
   width: 1.5rem;
   height: 1.5rem;
 }
 
 // css img first child of div popoverHeaderLeft
-.popoverHeader img:first-child{
+.popoverHeader img:first-child {
   cursor: pointer;
   width: 2rem;
   height: 2rem;
 }
-.popoverHeader img:last-child{
+
+.popoverHeader img:last-child {
   cursor: pointer;
   width: 1.5rem;
   height: 1.5rem;
 }
-.popoverHeaderRight{
+
+.popoverHeaderRight {
   width: 2rem;
   height: 2rem;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-.popoverHeaderMiddle{
+
+.popoverHeaderMiddle {
   flex-grow: 1;
   font-weight: 600;
   color: #555555;
   line-height: 22px;
-  font-size: 1rem ;
+  font-size: 1rem;
 }
-.popoverBodyTopCommon{
+
+.popoverBodyTopCommon {
   display: flex;
   justify-content: space-between;
   align-items: center;
 
 }
-.popoverBody{
+
+.popoverBody {
   padding: 0 1rem 0 1rem;
 }
-.popoverBodyTop{
+
+.popoverBodyTop {
   display: flex;
   align-items: center;
   color: #7B7B7B;
@@ -939,39 +969,49 @@ textarea {
   justify-content: space-between;
   // margin: 0.5rem 0;
 }
+
 .popoverBodyTopCommon img {
   width: 1.125rem;
   height: 1.125rem;
 }
-.popoverBodyTopCommon span{
+
+.popoverBodyTopCommon span {
   font-size: 0.75rem;
 }
-.popoverBodyCount img{
+
+.popoverBodyCount img {
   cursor: pointer;
 
 }
-.popoverBodyRefresh{
+
+.popoverBodyRefresh {
   cursor: pointer;
 }
+
 .popoverBodyRefresh span {
   font-size: 0.75rem;
 }
-.popoverBodyRefresh img {
-&.loading{
-  animation: loading 1.5s linear infinite;
 
-}
+.popoverBodyRefresh img {
+  &.loading {
+    animation: loading 1.5s linear infinite;
+
+  }
+
   margin-right: 0.5rem;
 }
+
 @keyframes loading {
   0% {
     transform: rotate(360deg);
   }
+
   100% {
     transform: rotate(0deg);
   }
 }
-.popoverBodyMiddle{
+
+.popoverBodyMiddle {
   background-color: #F8F8F8;
   color: #555555;
   margin-top: 0.3rem;
@@ -980,24 +1020,28 @@ textarea {
   border-radius: 0.625rem;
   box-sizing: border-box;
 }
+
 // css scroll
 .popoverBodyMiddle::-webkit-scrollbar {
   width: 0.5rem;
 
 }
-.popoverBodyMiddle p{
-  margin:0;
+
+.popoverBodyMiddle p {
+  margin: 0;
   padding: 0.5rem;
   font-size: 1rem;
 }
-.popoverBodyBottom{
+
+.popoverBodyBottom {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   margin-top: 0.5rem;
   // padding-bottom: 1rem;
 }
-.popoverBodyBottomBtn{
+
+.popoverBodyBottomBtn {
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -1007,40 +1051,47 @@ textarea {
   cursor: pointer;
 
 }
-.popoverBodyBottomBtn span{
+
+.popoverBodyBottomBtn span {
   font-size: 0.875rem;
   padding: 0 0.3rem;
 }
-.popoverBodyBottomBtnCopy{
+
+.popoverBodyBottomBtnCopy {
   border: 1px solid #DADCE0;
   color: #6F6F6F;
   margin-right: 0.5rem;
 
 }
-.popoverBodyBottomBtnApply{
-  background-color:#4643DD;
-  color:white;
+
+.popoverBodyBottomBtnApply {
+  background-color: #4643DD;
+  color: white;
 }
-.popoverBodyBottomBtnApply img{
+
+.popoverBodyBottomBtnApply img {
   width: 1rem;
   height: 1rem;
 }
-.popoverBodyBottomBtnApply span{
+
+.popoverBodyBottomBtnApply span {
   padding: 0 0.3rem;
   border-radius: 2.5rem;
 }
-.tooltipIcon{
+
+.tooltipIcon {
   min-width: 2rem;
   min-height: 2rem;
   border-radius: 0.5rem;
   box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
-  background-color:white;
+  background-color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
 }
-.tooltipIcon img{
+
+.tooltipIcon img {
   width: 1rem;
   height: 1rem;
   margin: 0.5rem;

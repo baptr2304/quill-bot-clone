@@ -214,7 +214,6 @@ onMounted(() => {
       status.value = 'initial'
       return
     }
-    
 
     const range = selection?.getRangeAt(0)
     rect.value = range.getBoundingClientRect()
@@ -431,7 +430,7 @@ function closePopover() {
     <div
       id="bounding" ref="boxB" :contenteditable="!dieukien"
       :class="[$style.textAreaItem, $style.textAreaItemRight]"
-      @blur="handleBlur" @mouseup="handleMouseUp" 
+      @blur="handleBlur" @mouseup="handleMouseUp"  
     >
       <div v-if="dieukien" :class="$style.textOutputPremiumContainer">
         <div :class="$style.textOutputPremium">

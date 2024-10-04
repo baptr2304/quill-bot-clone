@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// import StandardItem from './SubTabItem/StandardItem.vue'
-
 const props = defineProps<{
   language: string
 }>()
@@ -108,28 +106,27 @@ const levels = [
 
 ]
 
-const visibleTabs = ref(levels.slice(0, 10)) // Hiển thị tối đa 3 tab
-const hiddenTabs = ref(levels.slice(10)) // Các tab còn lại trong danh sách thả xuống
-const showMoreDropdown = ref(false) // Trạng thái hiển thị của danh sách thả xuống
+const visibleTabs = ref(levels.slice(0, 10))
+const hiddenTabs = ref(levels.slice(10))
+const showMoreDropdown = ref(false)
 function toggleMoreDropdown() {
   showMoreDropdown.value = !showMoreDropdown.value
 }
 function handleResize() {
-  if ( window.innerWidth > 1000 && window.innerWidth <= 1286) { // Điều chỉnh ngưỡng kích thước theo yêu cầu của bạn
-    visibleTabs.value = levels.slice(0, 5) // Hiển thị tối đa 1 tab
+  if (window.innerWidth > 1000 && window.innerWidth <= 1286) {
+    visibleTabs.value = levels.slice(0, 5)
     hiddenTabs.value = levels.slice(5)
   }
-  if(window.innerWidth <= 1000 && window.innerWidth > 768) {
-    visibleTabs.value = levels.slice(0, 3) // Hiển thị tối đa 1 tab
+  if (window.innerWidth <= 1000 && window.innerWidth > 768) {
+    visibleTabs.value = levels.slice(0, 3)
     hiddenTabs.value = levels.slice(3)
   }
-  if(window.innerWidth <= 768) {
-    visibleTabs.value = levels.slice(0, 1) // Hiển thị tối đa 1 tab
+  if (window.innerWidth <= 768) {
+    visibleTabs.value = levels.slice(0, 1)
     hiddenTabs.value = levels.slice(1)
   }
 }
 
-// Gọi hàm handleResize khi tải trang và khi thay đổi kích thước
 window.addEventListener('resize', handleResize)
 onMounted(() => handleResize())
 const activeSubItem = ref('Standard')
@@ -139,11 +136,10 @@ function openTab(tabName: string) {
 
 const itemActive = computed(() => levels.find(item => item.name === activeSubItem.value))
 function shouldShowTab(item: any) {
-  const currentLanguage = props.language.toLowerCase() // Lấy giá trị ngôn ngữ hiện tại
+  const currentLanguage = props.language.toLowerCase()
   if (currentLanguage === 'english')
-    return true // Nếu là 'English', hiển thị tất cả các tabs
-  else
-    return item.name === 'Standard' // Nếu không phải 'English', chỉ hiển thị 'Standard'
+    return true
+  return item.name === 'Standard'
 }
 </script>
 
@@ -173,13 +169,12 @@ function shouldShowTab(item: any) {
   </div>
   <div v-for="item in levels" :key="item.id">
     <div v-if="activeSubItem === item.name" :class="[$style.subTabContents, activeSubItem === item.name ? $style.activeSubTab : '']">
-      <StandardItem :dieukien="itemActive?.premium" />
+      <StandardItem :condition-display="itemActive?.premium" />
     </div>
   </div>
 </template>
 
 <style lang="scss" module>
-//subTabItem
 .subTab {
   display: flex;
   align-items: center;

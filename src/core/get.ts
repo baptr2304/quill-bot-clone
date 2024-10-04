@@ -65,7 +65,7 @@ export function getContentEditableSelection() {
 
   const range = selection.getRangeAt(0)
   const { start, end } = getSelectionCharacterOffsetWithin(range?.commonAncestorContainer as HTMLElement)
-  const cloneSelection = range!.cloneContents()// document fragemnt
+  const cloneSelection = range!.cloneContents()// document fragement
   const tempDiv = document.createElement('div')
   tempDiv.appendChild(cloneSelection)
 

@@ -1,22 +1,21 @@
 <script setup lang='ts'>
 import { computePosition, flip, inline, offset } from '@floating-ui/dom'
 // import { getSelection, setSelection } from '@/core/index.ts'
-import { useGetGenerativeModelGP } from '@/composables/useGetGenerativeModelGP.ts'
+import { useGetGenerativeModelGP } from '@/composables/useGetGenerativeModelGP'
 
 const props = defineProps<{
-  dieukien: Dieukien
+  conditionDisplay: ConditionDisplay
 }>()
-// const divRef = ref<HTMLElement>()
 
-interface Dieukien {
+interface ConditionDisplay {
   title: string
   uses_tag: string[]
   input_text: string
   paraphrased_text: string
 }
-const { dieukien } = toRefs(props)
+const { conditionDisplay } = toRefs(props)
 function getTextParaphrased() {
-  return dieukien.value.paraphrased_text.replace(/\{/g, '<span style="color: red">').replace(/\}/g, '</span>')
+  return conditionDisplay.value.paraphrased_text.replace(/\{/g, '<span style="color: red">').replace(/\}/g, '</span>')
 }
 const question = ref('')
 const placeholder = 'To rewrite text, enter or paste it here and press "Paraphrase".'
@@ -31,12 +30,15 @@ const currentIndex = ref(0)
 const isRefreshing = ref(false)
 
 async function fetchAnswer() {
-  isLoading.value = true
   answer.value = ''
+  isLoading.value = true
   try {
-    answer.value = await useGetGenerativeModelGP(question.value)
+    const newAnswer = await useGetGenerativeModelGP(question.value)
+    answer.value = newAnswer
   }
   catch (error) {
+    console.error('Error fetching answer:', error)
+    answer.value = 'An error occurred while fetching the answer.'
   }
   finally {
     isLoading.value = false
@@ -113,10 +115,10 @@ const childReacts = ref<Array<DOMRect>>([]) // lấy những thằng con
 const rect = ref(new DOMRect())// tao ra 1 DOM rect trong mac dinh la 0000
 const virtualElement = ref({ // tao 1 biến virtualElement , hàm này trả về retangle của rect
   getBoundingClientRect: () => rect.value,
-  getClientRects: () => [childReacts.value[childReacts.value.length - 1]] // trả về những thằng con của rect đó kiểu DOMRectList,
+  getClientRects: () => [childReacts.value[childReacts.value.length - 1]], // trả về những thằng con của rect đó kiểu DOMRectList,
 })
 
-async function attachTooltip() { // hàm này sẽ
+async function attachTooltip() { // hàm này sẽ tính toán vị trí của tooltip
   if (tooltipRef.value) {
     const { x, y, strategy } = await computePosition( // computePosition nay bat dong bo nen phai dung await
       virtualElement.value,
@@ -142,7 +144,7 @@ async function attachTooltip() { // hàm này sẽ
 
   // trong doc virtualEl la 1 button, ấn vào thì hiện tooltip
 }
-async function attachPopover() { // hàm này sẽ
+async function attachPopover() {
   if (popoverRef.value) {
     const { x, y, strategy } = await computePosition( // computePosition nay bat dong bo nen phai dung await
       virtualElement.value,
@@ -202,7 +204,7 @@ function handleMouseUp() {
 }
 
 onMounted(() => {
-  // co 1 su kien khi lang nghe no se lam gi do khi minh boi den
+  // co 1 su kien no se lam gi do khi minh boi den
   document.addEventListener('selectionchange', () => {
     selection = window.getSelection()
 
@@ -294,9 +296,6 @@ function closePopover() {
 </script>
 
 <template>
-  <!-- <div id="contentEditableDiv" ref="divRef" style=" width: 200px; " contenteditable>
-    Hello <b>World</b>
-  </div> -->
   <div ref="boxAB" :class="$style.textArea">
     <form
       ref="boxA" :class="[$style.textAreaItem, $style.textAreaItemLeft]" @input="checkTrash"
@@ -372,7 +371,7 @@ function closePopover() {
       }" @click="handleTooltipClick"
     >
       <img
-        src="https://scontent.fsgn2-10.fna.fbcdn.net/v/t1.15752-9/440872940_970343401235581_2649794944878998265_n.png?_nc_cat=109&ccb=1-7&_nc_sid=5f2048&_nc_ohc=1RHZLYvp6SMQ7kNvgEtGa4M&_nc_oc=Adin3-Damq9sEn3uCXMpDAUrKPEruS8bNv3zi1TKQW90BpRW8botPrgst-0Wu5p-3ejxDRNdw8xcYtSd3iZ57pab&_nc_ht=scontent.fsgn2-10.fna&oh=03_Q7cD1QFS7wPKaIw4xL9ZlZhe6-XlXDgYkXV7RIAJuvwLYU_V1Q&oe=666D5C04"
+        src="https://media.istockphoto.com/id/1254627323/vi/vec-to/gi%E1%BB%8Dt-m%C6%B0a-gi%E1%BB%8Dt-n%C6%B0%E1%BB%9Bc-gi%E1%BB%8Dt-vector-icon-%C4%91%E1%BB%83-u%E1%BB%91ng-n%C6%B0%E1%BB%9Bc-m%C6%B0a-v%E1%BB%87-sinh.jpg?s=612x612&w=0&k=20&c=6IJp06RR2be1yK691aIolM304E70fGOddpdyi5yOcHc="
         alt=""
       >
     </div>
@@ -428,56 +427,57 @@ function closePopover() {
         </div>
       </div>
     </div>
+
     <div
-      id="bounding" ref="boxB" contenteditable :class="[$style.textAreaItem, $style.textAreaItemRight]"
-      @blur="handleBlur" @mouseup.stop="handleMouseUp"
-    />
-
-    <div v-if="dieukien" :class="$style.textOutputPremiumContainer">
-      <div :class="$style.textOutputPremium">
-        <div :class="$style.textOutputPremiumTop">
-          <h2>{{ dieukien?.title }}</h2>
-          <br>
-          <p>Uses</p>
-          <ul :class="$style.textOutputPremiumTag">
-            <li v-for="item in dieukien.uses_tag" :key="item">
-              {{ item }}
-            </li>
-          </ul>
-          <br>
-        </div>
-        <div :class="$style.textOutputPremiumBottom">
-          <div :class="[$style.textOutputPremiumBottomItem, $style.textOutputPremiumBottomItemLeft]">
-            <p>INPUT TEXT</p>
-            <span>{{ dieukien?.input_text }}</span>
+      id="bounding" ref="boxB" contenteditable
+      :class="[$style.textAreaItem, $style.textAreaItemRight]"
+      @blur="handleBlur" @mouseup="handleMouseUp"
+    >
+      <span v-if="isLoading">Loading...</span>
+      <template v-if="conditionDisplay">
+        <div :class="$style.textOutputPremiumContainer">
+          <div :class="$style.textOutputPremium">
+            <div :class="$style.textOutputPremiumTop">
+              <h2>{{ conditionDisplay?.title }}</h2>
+              <br>
+              <p>Uses</p>
+              <ul :class="$style.textOutputPremiumTag">
+                <li v-for="item in conditionDisplay.uses_tag" :key="item">
+                  {{ item }}
+                </li>
+              </ul>
+              <br>
+            </div>
+            <div :class="$style.textOutputPremiumBottom">
+              <div :class="[$style.textOutputPremiumBottomItem, $style.textOutputPremiumBottomItemLeft]">
+                <p>INPUT TEXT</p>
+                <span>{{ conditionDisplay?.input_text }}</span>
+              </div>
+              <div :class="$style.separationItem">
+                <img src="@/assets/svg/arrow-sm-right-svgrepo-com.svg" alt="">
+              </div>
+              <div :class="[$style.textOutputPremiumBottomItem, $style.textOutputPremiumBottomItemRight]">
+                <p>PARAPHRASED TEXT</p>
+                <span v-html="getTextParaphrased()" />
+              </div>
+            </div>
           </div>
-          <div :class="$style.separationItem">
-            <img src="@/assets/svg/arrow-sm-right-svgrepo-com.svg" alt="">
+          <div :class="$style.upGradeItem">
+            <div :class="$style.upGradeItemBtn">
+              <img src="@/assets/svg/diamond-svgrepo-com.svg" alt="">
+              <span>Unlock Premium Modes</span>
+            </div>
+            <div :class="$style.upGradeItemSuggest">
+              <span>3-Day Money-Back Guarantee</span>
+              <img src="@/assets/svg/like-svgrepo-com.svg" alt="">
+            </div>
           </div>
-          <div :class="[$style.textOutputPremiumBottomItem, $style.textOutputPremiumBottomItemRight]">
-            <p>
-              PARAPHRASED TEXT
-            </p>
-            <span v-html="getTextParaphrased()" />
-          </div>
         </div>
-      </div>
-      <div :class="$style.UpgradeItem">
-        <div :class="$style.UpgradeItemBtn">
-          <img src="@/assets/svg/diamond-svgrepo-com.svg" alt="">
-          <span>Unlock Premium Modes</span>
-        </div>
-        <div :class="$style.UpgradeItemSuggest">
-          <span>3-Day Money-Back Guarantee</span>
-          <img src="@/assets/svg/like-svgrepo-com.svg" alt="">
-        </div>
-      </div>
+      </template>
+      <template v-else>
+        {{ answer }}
+      </template>
     </div>
-    <span v-else-if="isLoading">
-      Loading...
-    </span>
-    <span v-else-if="answer" v-html="answer" />
-
     <!-- popup -->
     <div v-if="showPopup" :class="$style.popup">
       <div :class="$style.popupContent">
@@ -827,7 +827,7 @@ textarea {}
 
 }
 
-.UpgradeItem {
+.upGradeItem {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -836,7 +836,7 @@ textarea {}
 
 }
 
-.UpgradeItemBtn {
+.upGradeItemBtn {
   background-color: var(--color-primary);
   // padding: 0.5rem 0.844rem;
   height: 2.313rem;
@@ -852,13 +852,13 @@ textarea {}
   cursor: pointer;
 }
 
-.UpgradeItem img {
+.upGradeItem img {
   width: 1.125rem;
   height: 1.125rem;
   margin-right: 0.5rem;
 }
 
-.UpgradeItemSuggest {
+.upGradeItemSuggest {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -867,14 +867,14 @@ textarea {}
   margin-top: 0.5rem;
 }
 
-.UpgradeItemSuggest span {
+.upGradeItemSuggest span {
   font-size: 0.75rem;
   font-weight: 600;
   color: #5F6368;
   margin-right: 0.5rem;
 }
 
-.UpgradeItemSuggest img {
+.upGradeItemSuggest img {
   width: 1rem;
   height: 1rem;
 

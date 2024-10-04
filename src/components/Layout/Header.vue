@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { EventBus } from '@/eventBus';
+import { EventBus } from '@/eventBus'
 
 function toggleSidebar() {
-  EventBus.emit('toggleSidebar');
+  EventBus.emit('toggleSidebar')
 }
 </script>
 
@@ -28,7 +28,7 @@ function toggleSidebar() {
         <!-- tooltip -->
         <img
           :class="$style.headerRightBtnLanguageImg"
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/US_flag_51_stars.svg/1235px-US_flag_51_stars.svg.png"
+          src="https://cdn.britannica.com/79/4479-050-6EF87027/flag-Stars-and-Stripes-May-1-1795.jpg"
           alt=""
         >
         <div :class="$style.headerRightBtnLanguageToolTip">
@@ -39,7 +39,7 @@ function toggleSidebar() {
             <div :class="$style.languageToolTipTextItem">
               <img
                 :class="$style.languageToolTipTextItemFlag"
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/US_flag_51_stars.svg/1235px-US_flag_51_stars.svg.png"
+                src="https://cdn.britannica.com/79/4479-050-6EF87027/flag-Stars-and-Stripes-May-1-1795.jpg"
                 alt=""
               >
               <span>American English</span>

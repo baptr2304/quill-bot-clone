@@ -11,10 +11,10 @@ export async function useGetGenerativeModelGP(prompt: any) {
     Prompt: Cats are really adorable pets.
     Reaction: Cats are really cute creatures.
   One more instance:
-    Request: Tôi đẹp.
-    In response, Tôi kỳ xinh đẹp cực.
+    Prompt: Tôi đẹp.
+    Reaction, Tôi kỳ xinh đẹp cực.
   Now, could you please rephrase this query and answer it?
-    ${prompt}
+    Prompt: ${prompt}
   `
   const result = await model.generateContent(prompt)
   const response = await result.response
